@@ -1,0 +1,51 @@
+services:
+  postgres:
+    ports:
+      - "${DB_PORT:-5432}:5432"
+
+  flyway:
+    image: flyway/flyway:11-alpine
+    command: migrate
+    environment:
+      FLYWAY_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-notebook_lm}
+      FLYWAY_USER: ${DB_USER:-postgres}
+      FLYWAY_PASSWORD: ${DB_PASSWORD:-postgres}
+      FLYWAY_CONNECT_RETRIES: 12
+    volumes:
+      - ./src/main/resources/db/migration:/flyway/sql:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - backend
+
+  api:
+    build:
+      context: .
+      target: development
+    command: ./gradlew bootRun --no-daemon
+    environment:
+      APP_ENV: ${APP_ENV:-dev}
+      SPRINGDOC_ENABLED: ${SPRINGDOC_ENABLED:-false}
+      APP_PORT: ${APP_PORT:-8080}
+      DB_NAME: ${DB_NAME:-notebook_lm}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      JWT_SECRET: ${JWT_SECRET:-bG9jYWwtZGV2ZWxvcG1lbnQtc2VjcmV0LW11c3QtYmUtYXQtbGVhc3QtMzItYnl0ZXM=}
+      JWT_ACCESS_TOKEN_TTL: ${JWT_ACCESS_TOKEN_TTL:-PT15M}
+      JWT_REFRESH_TOKEN_TTL: ${JWT_REFRESH_TOKEN_TTL:-P30D}
+    volumes:
+      - .:/workspace
+      - gradle-cache:/root/.gradle
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    depends_on:
+      flyway:
+        condition: service_completed_successfully
+    networks:
+      - backend
+
+volumes:
+  gradle-cache:
