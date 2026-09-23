@@ -1,6 +1,6 @@
 package vn.edu.fsoftacademy.api.application.query.listprojects;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 import java.time.Instant;
@@ -8,21 +8,30 @@ import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import vn.edu.fsoftacademy.api.application.repository.ProjectRepository;
-import vn.edu.fsoftacademy.api.domain.entity.Project;
 
 class ListProjectsQueryHandlerTest {
   @Test
-  void returnsRepositoryOrderForAuthenticatedOwner() {
+  void delegatesAllFiltersAndPagingToOwnerScopedRepository() {
     var projects = mock(ProjectRepository.class);
     UUID ownerId = UUID.randomUUID();
-    Instant now = Instant.now();
-    var newest = new Project(UUID.randomUUID(), ownerId, "Newest", null, now, now);
-    var oldest = new Project(UUID.randomUUID(), ownerId, "Oldest", null, now.minusSeconds(1), now);
-    when(projects.findAllByOwnerId(ownerId)).thenReturn(List.of(newest, oldest));
+    var query = new ListProjectsQuery("  notes ", Instant.parse("2026-01-01T00:00:00Z"),
+        Instant.parse("2026-02-01T00:00:00Z"), ProjectSortField.UPDATED_AT, SortDirection.ASC, 1, 10);
+    var expected = new ProjectPage(List.of(), 1, 10, 0, 0, false, true);
+    when(projects.findPageByOwnerId(ownerId, query)).thenReturn(expected);
 
-    var result = new ListProjectsQueryHandler(projects).handle(ownerId);
+    new ListProjectsQueryHandler(projects).handle(ownerId, query);
 
-    assertEquals(List.of("Newest", "Oldest"), result.stream().map(ListProjectsResult::title).toList());
-    verify(projects).findAllByOwnerId(ownerId);
+    verify(projects).findPageByOwnerId(ownerId, query);
+  }
+
+  @Test
+  void rejectsInvalidDateRangeBeforeQueryingRepository() {
+    var projects = mock(ProjectRepository.class);
+    var query = new ListProjectsQuery(null, Instant.parse("2026-02-01T00:00:00Z"),
+        Instant.parse("2026-01-01T00:00:00Z"), null, null, 0, 20);
+
+    assertThrows(IllegalArgumentException.class,
+        () -> new ListProjectsQueryHandler(projects).handle(UUID.randomUUID(), query));
+    verifyNoInteractions(projects);
   }
 }

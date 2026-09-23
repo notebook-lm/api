@@ -116,7 +116,8 @@ class HttpSecurityConfigurationTest {
   @Test
   void projectReadPermissionAllowsListInvocation() throws Exception {
     UUID userId = UUID.randomUUID();
-    when(listProjects.handle(userId)).thenReturn(List.of());
+    when(listProjects.handle(org.mockito.ArgumentMatchers.eq(userId), org.mockito.ArgumentMatchers.any()))
+        .thenReturn(new vn.edu.fsoftacademy.api.application.query.listprojects.ProjectPage(List.of(), 0, 20, 0, 0, false, false));
 
     mvc.perform(get("/api/v1/projects").with(authentication(
         new UsernamePasswordAuthenticationToken(userId, null,

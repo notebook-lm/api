@@ -70,6 +70,31 @@ class ProjectControllerTest {
     verify(delete).execute(ownerId, projectId);
   }
   @Test
+  void listMapsQueryParametersToPaginatedResponse() {
+    var list = mock(ListProjectsQueryHandler.class);
+    var get = mock(GetProjectQueryHandler.class);
+    controller = new ProjectController(create, list, get, update, delete);
+    Instant now = Instant.now();
+    when(list.handle(eq(ownerId), any())).thenReturn(new ProjectPage(
+        List.of(new ListProjectsResult(projectId, "Notes", null, now, now)), 1, 10, 11, 2, false, true));
+
+    var response = controller.list(ownerId, " notes ", null, null, "updatedAt", "asc", 1, 10);
+
+    assertEquals(11, response.totalItems());
+    assertEquals("Notes", response.items().getFirst().title());
+    verify(list).handle(eq(ownerId), eq(new ListProjectsQuery("notes", null, null,
+        ProjectSortField.UPDATED_AT, SortDirection.ASC, 1, 10)));
+  }
+
+  @Test
+  void listRejectsInvalidSortAndPageInputs() {
+    org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+        () -> controller.list(ownerId, null, null, null, "unknown", "desc", 0, 20));
+    org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+        () -> controller.list(ownerId, null, null, null, "title", "desc", -1, 20));
+  }
+
+  @Test
   void createRejectsBlankAndOversizedFields() throws Exception {
     mvc.perform(post("/api/v1/projects").principal(ownerId::toString)
             .contentType(MediaType.APPLICATION_JSON).content("{\"title\":\"\",\"description\":\"ok\"}"))
