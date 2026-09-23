@@ -2,6 +2,9 @@ package vn.edu.fsoftacademy.api.api.rest.project;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.mockito.Mockito.*;
 
 import java.time.Instant;
@@ -9,6 +12,11 @@ import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import vn.edu.fsoftacademy.api.api.rest.shared.error.BusinessExceptionHandler;
+import vn.edu.fsoftacademy.api.api.rest.shared.error.ValidationExceptionHandler;
 import vn.edu.fsoftacademy.api.api.rest.project.dto.request.CreateProjectRequest;
 import vn.edu.fsoftacademy.api.api.rest.project.dto.request.UpdateProjectRequest;
 import vn.edu.fsoftacademy.api.application.command.createproject.*;
@@ -24,6 +32,7 @@ class ProjectControllerTest {
   private UpdateProjectCommandHandler update;
   private DeleteProjectCommandHandler delete;
   private ProjectController controller;
+  private MockMvc mvc;
 
   @BeforeEach
   void setUp() {
@@ -33,6 +42,8 @@ class ProjectControllerTest {
     update = mock(UpdateProjectCommandHandler.class);
     delete = mock(DeleteProjectCommandHandler.class);
     controller = new ProjectController(create, list, get, update, delete);
+    mvc = MockMvcBuilders.standaloneSetup(controller)
+        .setControllerAdvice(new BusinessExceptionHandler(), new ValidationExceptionHandler()).build();
   }
 
   @Test
@@ -57,5 +68,17 @@ class ProjectControllerTest {
     assertEquals("New", response.title());
     verify(update).execute(ownerId, projectId, new UpdateProjectCommand("New", "Details"));
     verify(delete).execute(ownerId, projectId);
+  }
+  @Test
+  void createRejectsBlankAndOversizedFields() throws Exception {
+    mvc.perform(post("/api/v1/projects").principal(ownerId::toString)
+            .contentType(MediaType.APPLICATION_JSON).content("{\"title\":\"\",\"description\":\"ok\"}"))
+        .andExpect(status().isBadRequest()).andExpect(jsonPath("$.message").value("Validation failed"));
+
+    mvc.perform(post("/api/v1/projects").principal(ownerId::toString)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"title\":\"Project\",\"description\":\"%s\"}".formatted("x".repeat(2001))))
+        .andExpect(status().isBadRequest());
+    verifyNoInteractions(create);
   }
 }
