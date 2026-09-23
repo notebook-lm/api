@@ -1,0 +1,61 @@
+package vn.edu.fsoftacademy.api.api.rest.project;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import vn.edu.fsoftacademy.api.api.rest.project.dto.request.CreateProjectRequest;
+import vn.edu.fsoftacademy.api.api.rest.project.dto.request.UpdateProjectRequest;
+import vn.edu.fsoftacademy.api.application.command.createproject.*;
+import vn.edu.fsoftacademy.api.application.command.deleteproject.DeleteProjectCommandHandler;
+import vn.edu.fsoftacademy.api.application.command.updateproject.*;
+import vn.edu.fsoftacademy.api.application.query.getproject.*;
+import vn.edu.fsoftacademy.api.application.query.listprojects.*;
+
+class ProjectControllerTest {
+  private final UUID ownerId = UUID.randomUUID();
+  private final UUID projectId = UUID.randomUUID();
+  private CreateProjectCommandHandler create;
+  private UpdateProjectCommandHandler update;
+  private DeleteProjectCommandHandler delete;
+  private ProjectController controller;
+
+  @BeforeEach
+  void setUp() {
+    create = mock(CreateProjectCommandHandler.class);
+    var list = mock(ListProjectsQueryHandler.class);
+    var get = mock(GetProjectQueryHandler.class);
+    update = mock(UpdateProjectCommandHandler.class);
+    delete = mock(DeleteProjectCommandHandler.class);
+    controller = new ProjectController(create, list, get, update, delete);
+  }
+
+  @Test
+  void createMapsRequestToOwnerScopedCommand() {
+    Instant now = Instant.now();
+    when(create.execute(any(), any())).thenReturn(new CreateProjectResult(projectId, "Notes", null, now, now));
+
+    var response = controller.create(ownerId, new CreateProjectRequest("Notes", null));
+
+    assertEquals(projectId, response.id());
+    verify(create).execute(ownerId, new CreateProjectCommand("Notes", null));
+  }
+
+  @Test
+  void updateAndDeleteUseAuthenticatedOwner() {
+    Instant now = Instant.now();
+    when(update.execute(any(), any(), any())).thenReturn(new UpdateProjectResult(projectId, "New", "Details", now, now));
+
+    var response = controller.update(ownerId, projectId, new UpdateProjectRequest("New", "Details"));
+    controller.delete(ownerId, projectId);
+
+    assertEquals("New", response.title());
+    verify(update).execute(ownerId, projectId, new UpdateProjectCommand("New", "Details"));
+    verify(delete).execute(ownerId, projectId);
+  }
+}
