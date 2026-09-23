@@ -1,15 +1,15 @@
 package vn.edu.fsoftacademy.api.application.query.listprojects;
 
-import java.util.List;
 import java.util.UUID;
 import vn.edu.fsoftacademy.api.application.repository.ProjectRepository;
 
 public class ListProjectsQueryHandler {
   private final ProjectRepository projects;
   public ListProjectsQueryHandler(ProjectRepository projects) { this.projects = projects; }
-  public List<ListProjectsResult> handle(UUID ownerId) {
-    return projects.findAllByOwnerId(ownerId).stream()
-        .map(project -> new ListProjectsResult(project.getId(), project.getTitle(), project.getDescription(), project.getCreatedAt(), project.getUpdatedAt()))
-        .toList();
+  public ProjectPage handle(UUID ownerId, ListProjectsQuery query) {
+    if (query.createdFrom() != null && query.createdTo() != null && query.createdFrom().isAfter(query.createdTo())) {
+      throw new IllegalArgumentException("createdFrom must be before or equal to createdTo");
+    }
+    return projects.findPageByOwnerId(ownerId, query);
   }
 }

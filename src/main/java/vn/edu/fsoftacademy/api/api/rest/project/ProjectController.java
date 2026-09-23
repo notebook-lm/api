@@ -4,7 +4,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import java.util.List;
+import java.time.Instant;
+import java.util.Locale;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,11 +17,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import vn.edu.fsoftacademy.api.api.rest.project.dto.request.CreateProjectRequest;
 import vn.edu.fsoftacademy.api.api.rest.project.dto.request.UpdateProjectRequest;
 import vn.edu.fsoftacademy.api.api.rest.project.dto.response.ProjectResponse;
+import vn.edu.fsoftacademy.api.api.rest.project.dto.response.ProjectPageResponse;
 import vn.edu.fsoftacademy.api.application.command.createproject.CreateProjectCommand;
 import vn.edu.fsoftacademy.api.application.command.createproject.CreateProjectCommandHandler;
 import vn.edu.fsoftacademy.api.application.command.createproject.CreateProjectResult;
@@ -32,6 +35,9 @@ import vn.edu.fsoftacademy.api.application.query.getproject.GetProjectQueryHandl
 import vn.edu.fsoftacademy.api.application.query.getproject.GetProjectResult;
 import vn.edu.fsoftacademy.api.application.query.listprojects.ListProjectsQueryHandler;
 import vn.edu.fsoftacademy.api.application.query.listprojects.ListProjectsResult;
+import vn.edu.fsoftacademy.api.application.query.listprojects.ListProjectsQuery;
+import vn.edu.fsoftacademy.api.application.query.listprojects.ProjectSortField;
+import vn.edu.fsoftacademy.api.application.query.listprojects.SortDirection;
 
 @RestController
 @Tag(name = "Projects", description = "JWT-protected operations for private projects.")
@@ -60,8 +66,15 @@ public class ProjectController {
   @GetMapping
   @Operation(summary = "List my projects", description = "Requires `project:read`.")
   @PreAuthorize("hasAuthority('project:read')")
-  public List<ProjectResponse> list(@AuthenticationPrincipal UUID ownerId) {
-    return list.handle(ownerId).stream().map(this::response).toList();
+  public ProjectPageResponse list(@AuthenticationPrincipal UUID ownerId,
+      @RequestParam(required = false) String q, @RequestParam(required = false) Instant createdFrom,
+      @RequestParam(required = false) Instant createdTo, @RequestParam(defaultValue = "createdAt") String sortBy,
+      @RequestParam(defaultValue = "desc") String direction, @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "20") int size) {
+    if (page < 0 || size < 1 || size > 100) throw new IllegalArgumentException("page must be non-negative and size must be between 1 and 100");
+    var result = list.handle(ownerId, new ListProjectsQuery(q, createdFrom, createdTo, parseSortBy(sortBy), parseDirection(direction), page, size));
+    return new ProjectPageResponse(result.items().stream().map(this::response).toList(), result.page(), result.size(),
+        result.totalItems(), result.totalPages(), result.hasNext(), result.hasPrevious());
   }
 
   @GetMapping("/{projectId}")
@@ -85,6 +98,13 @@ public class ProjectController {
   @PreAuthorize("hasAuthority('project:delete')")
   public void delete(@AuthenticationPrincipal UUID ownerId, @PathVariable UUID projectId) {
     delete.execute(ownerId, projectId);
+  }
+
+  private ProjectSortField parseSortBy(String value) {
+    return switch (value.toLowerCase(Locale.ROOT)) { case "createdat" -> ProjectSortField.CREATED_AT; case "updatedat" -> ProjectSortField.UPDATED_AT; case "title" -> ProjectSortField.TITLE; default -> throw new IllegalArgumentException("sortBy must be createdAt, updatedAt, or title"); };
+  }
+  private SortDirection parseDirection(String value) {
+    return switch (value.toLowerCase(Locale.ROOT)) { case "asc" -> SortDirection.ASC; case "desc" -> SortDirection.DESC; default -> throw new IllegalArgumentException("direction must be asc or desc"); };
   }
 
   private ProjectResponse response(CreateProjectResult result) { return new ProjectResponse(result.id(), result.title(), result.description(), result.createdAt(), result.updatedAt()); }

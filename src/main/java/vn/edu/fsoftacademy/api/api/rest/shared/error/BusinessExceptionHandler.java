@@ -15,6 +15,11 @@ public class BusinessExceptionHandler extends GlobalExceptionHandler {
   ResponseEntity<ApiError> conflict(ConflictException ex) {
     return error(HttpStatus.CONFLICT, ex.getMessage(), Map.of());
   }
+  @ExceptionHandler(IllegalArgumentException.class)
+  ResponseEntity<ApiError> invalidArgument(IllegalArgumentException ex) {
+    return error(HttpStatus.BAD_REQUEST, ex.getMessage(), Map.of());
+  }
+
   @ExceptionHandler(ProjectNotFoundException.class)
   ResponseEntity<ApiError> projectNotFound(ProjectNotFoundException ex) {
     return error(HttpStatus.NOT_FOUND, ex.getMessage(), Map.of());
