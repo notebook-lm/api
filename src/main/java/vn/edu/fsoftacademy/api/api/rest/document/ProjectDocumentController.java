@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.io.InputStream;
+import java.time.Instant;
+import java.util.Locale;
 import java.util.UUID;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -12,6 +14,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import vn.edu.fsoftacademy.api.api.rest.document.dto.request.UpdateDocumentRequest;
+import vn.edu.fsoftacademy.api.api.rest.document.dto.response.ProjectDocumentPageResponse;
 import vn.edu.fsoftacademy.api.api.rest.document.dto.response.ProjectDocumentResponse;
 import vn.edu.fsoftacademy.api.api.rest.shared.util.FileUploadUtils;
 import vn.edu.fsoftacademy.api.application.command.deletedocument.DeleteDocumentCommandHandler;
@@ -19,7 +22,11 @@ import vn.edu.fsoftacademy.api.application.command.updatedocument.*;
 import vn.edu.fsoftacademy.api.application.command.uploaddocument.*;
 import vn.edu.fsoftacademy.api.application.port.ObjectStorage;
 import vn.edu.fsoftacademy.api.application.query.getdocument.GetDocumentQueryHandler;
+import vn.edu.fsoftacademy.api.application.query.listdocuments.DocumentSortDirection;
+import vn.edu.fsoftacademy.api.application.query.listdocuments.DocumentSortField;
+import vn.edu.fsoftacademy.api.application.query.listdocuments.ListDocumentsQuery;
 import vn.edu.fsoftacademy.api.application.query.listdocuments.ListDocumentsQueryHandler;
+import vn.edu.fsoftacademy.api.application.query.listdocuments.ListDocumentsResult.Item;
 import vn.edu.fsoftacademy.api.domain.entity.ProjectDocument;
 
 @RestController
@@ -86,9 +93,28 @@ public class ProjectDocumentController {
   @GetMapping
   @PreAuthorize("hasAuthority('document:read')")
   @Operation(summary = "List project documents")
-  public java.util.List<ProjectDocumentResponse> list(
-      @AuthenticationPrincipal UUID ownerId, @PathVariable UUID projectId) {
-    return list.handle(ownerId, projectId).stream().map(this::response).toList();
+  public ProjectDocumentPageResponse list(
+      @AuthenticationPrincipal UUID ownerId,
+      @PathVariable UUID projectId,
+      @RequestParam(required = false) String q,
+      @RequestParam(required = false) Instant createdFrom,
+      @RequestParam(required = false) Instant createdTo,
+      @RequestParam(defaultValue = "createdAt") String sortBy,
+      @RequestParam(defaultValue = "desc") String direction,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "20") int size) {
+    if (page < 0 || size < 1 || size > 100)
+      throw new IllegalArgumentException(
+          "page must be non-negative and size must be between 1 and 100");
+    var result =
+        list.handle(
+            ownerId,
+            projectId,
+            new ListDocumentsQuery(
+                q, createdFrom, createdTo, parseSortBy(sortBy), parseDirection(direction), page, size));
+    return new ProjectDocumentPageResponse(
+        result.items().stream().map(this::response).toList(),
+        result.page(), result.size(), result.totalItems(), result.totalPages(), result.hasNext(), result.hasPrevious());
   }
 
   @GetMapping("/{documentId}")
@@ -141,6 +167,28 @@ public class ProjectDocumentController {
       @PathVariable UUID projectId,
       @PathVariable UUID documentId) {
     delete.execute(ownerId, projectId, documentId);
+  }
+
+  private DocumentSortField parseSortBy(String value) {
+    return switch (value.toLowerCase(Locale.ROOT)) {
+      case "createdat" -> DocumentSortField.CREATED_AT;
+      case "updatedat" -> DocumentSortField.UPDATED_AT;
+      case "title" -> DocumentSortField.TITLE;
+      default -> throw new IllegalArgumentException("sortBy must be createdAt, updatedAt, or title");
+    };
+  }
+
+  private DocumentSortDirection parseDirection(String value) {
+    return switch (value.toLowerCase(Locale.ROOT)) {
+      case "asc" -> DocumentSortDirection.ASC;
+      case "desc" -> DocumentSortDirection.DESC;
+      default -> throw new IllegalArgumentException("direction must be asc or desc");
+    };
+  }
+
+  private ProjectDocumentResponse response(Item d) {
+    return new ProjectDocumentResponse(
+        d.id(), d.projectId(), d.title(), d.originalFilename(), d.contentType(), d.sizeBytes(), d.createdAt(), d.updatedAt());
   }
 
   private ProjectDocumentResponse response(ProjectDocument d) {

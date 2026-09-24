@@ -1,11 +1,9 @@
 package vn.edu.fsoftacademy.api.application.query.listdocuments;
 
-import java.util.List;
 import java.util.UUID;
 import vn.edu.fsoftacademy.api.application.exception.ProjectNotFoundException;
 import vn.edu.fsoftacademy.api.application.repository.ProjectDocumentRepository;
 import vn.edu.fsoftacademy.api.application.repository.ProjectRepository;
-import vn.edu.fsoftacademy.api.domain.entity.ProjectDocument;
 
 public class ListDocumentsQueryHandler {
   private final ProjectRepository projects;
@@ -17,8 +15,33 @@ public class ListDocumentsQueryHandler {
     this.documents = documents;
   }
 
-  public List<ProjectDocument> handle(UUID ownerId, UUID projectId) {
+  public ListDocumentsResult handle(UUID ownerId, UUID projectId, ListDocumentsQuery query) {
+    if (query.createdFrom() != null
+        && query.createdTo() != null
+        && query.createdFrom().isAfter(query.createdTo())) {
+      throw new IllegalArgumentException("createdFrom must be before or equal to createdTo");
+    }
     projects.findByIdAndOwnerId(projectId, ownerId).orElseThrow(ProjectNotFoundException::new);
-    return documents.findAllByProjectId(projectId);
+    var page = documents.findPageByProjectId(projectId, query);
+    return new ListDocumentsResult(
+        page.items().stream()
+            .map(
+                document ->
+                    new ListDocumentsResult.Item(
+                        document.getId(),
+                        document.getProjectId(),
+                        document.getTitle(),
+                        document.getOriginalFilename(),
+                        document.getContentType(),
+                        document.getSizeBytes(),
+                        document.getCreatedAt(),
+                        document.getUpdatedAt()))
+            .toList(),
+        page.page(),
+        page.size(),
+        page.totalItems(),
+        page.totalPages(),
+        page.hasNext(),
+        page.hasPrevious());
   }
 }

@@ -17,6 +17,7 @@ import vn.edu.fsoftacademy.api.application.command.uploaddocument.*;
 import vn.edu.fsoftacademy.api.application.port.ObjectStorage;
 import vn.edu.fsoftacademy.api.application.query.getdocument.GetDocumentQueryHandler;
 import vn.edu.fsoftacademy.api.application.query.listdocuments.ListDocumentsQueryHandler;
+import vn.edu.fsoftacademy.api.application.query.listdocuments.ListDocumentsResult;
 import vn.edu.fsoftacademy.api.domain.entity.ProjectDocument;
 
 class ProjectDocumentControllerTest {
@@ -81,9 +82,13 @@ class ProjectDocumentControllerTest {
   @Test
   void listUpdateDeleteUseProjectScopedAuthenticatedCalls() {
     var d = document();
-    when(list.handle(ownerId, projectId)).thenReturn(List.of(d));
+    when(list.handle(eq(ownerId), eq(projectId), any()))
+        .thenReturn(
+            new ListDocumentsResult(
+                List.of(new ListDocumentsResult.Item(documentId, projectId, "Source", "source.pdf", "application/pdf", 5, Instant.now(), Instant.now())),
+                0, 20, 1, 1, false, false));
     when(update.execute(eq(ownerId), eq(projectId), eq(documentId), any())).thenReturn(d);
-    assertEquals(1, controller.list(ownerId, projectId).size());
+    assertEquals(1, controller.list(ownerId, projectId, null, null, null, "createdAt", "desc", 0, 20).items().size());
     assertEquals(
         "Source",
         controller
