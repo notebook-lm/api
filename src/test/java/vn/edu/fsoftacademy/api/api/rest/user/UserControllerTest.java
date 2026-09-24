@@ -41,14 +41,19 @@ class UserControllerTest {
     password = mock(ChangePasswordCommandHandler.class);
     delete = mock(DeleteAccountCommandHandler.class);
     controller = new UserController(get, update, email, password, delete);
-    mvc = MockMvcBuilders.standaloneSetup(controller)
-        .setControllerAdvice(new AuthenticationExceptionHandler(), new BusinessExceptionHandler(), new ValidationExceptionHandler())
-        .build();
+    mvc =
+        MockMvcBuilders.standaloneSetup(controller)
+            .setControllerAdvice(
+                new AuthenticationExceptionHandler(),
+                new BusinessExceptionHandler(),
+                new ValidationExceptionHandler())
+            .build();
   }
 
   @Test
   void getMeMapsCurrentUserQuery() {
-    when(get.handle(any())).thenReturn(new GetCurrentUserResult(userId, "user@example.com", "User"));
+    when(get.handle(any()))
+        .thenReturn(new GetCurrentUserResult(userId, "user@example.com", "User"));
 
     var response = controller.getMe(userId);
 
@@ -58,7 +63,8 @@ class UserControllerTest {
 
   @Test
   void updateProfileMapsUpdateCommand() {
-    when(update.execute(any(), any())).thenReturn(new UpdateProfileResult(userId, "user@example.com", "New Name"));
+    when(update.execute(any(), any()))
+        .thenReturn(new UpdateProfileResult(userId, "user@example.com", "New Name"));
 
     var response = controller.updateProfile(userId, new UpdateProfileRequest("New Name"));
 
@@ -68,9 +74,12 @@ class UserControllerTest {
 
   @Test
   void changeEmailMapsChangeEmailCommand() {
-    when(email.execute(any(), any())).thenReturn(new ChangeEmailResult(userId, "new@example.com", "User"));
+    when(email.execute(any(), any()))
+        .thenReturn(new ChangeEmailResult(userId, "new@example.com", "User"));
 
-    var response = controller.changeEmail(userId, new ChangeEmailRequest("new@example.com", "current-password"));
+    var response =
+        controller.changeEmail(
+            userId, new ChangeEmailRequest("new@example.com", "current-password"));
 
     assertEquals("new@example.com", response.email());
     verify(email).execute(userId, new ChangeEmailCommand("new@example.com", "current-password"));
@@ -78,7 +87,8 @@ class UserControllerTest {
 
   @Test
   void changePasswordMapsChangePasswordCommand() {
-    controller.changePassword(userId, new ChangePasswordRequest("current-password", "new-password"));
+    controller.changePassword(
+        userId, new ChangePasswordRequest("current-password", "new-password"));
 
     verify(password).execute(userId, new ChangePasswordCommand("current-password", "new-password"));
   }
@@ -92,8 +102,11 @@ class UserControllerTest {
 
   @Test
   void changeEmailRejectsInvalidRequest() throws Exception {
-    mvc.perform(patch("/api/v1/users/me/email").principal(userId::toString).contentType(MediaType.APPLICATION_JSON)
-            .content("{\"email\":\"bad\",\"currentPassword\":\"\"}"))
+    mvc.perform(
+            patch("/api/v1/users/me/email")
+                .principal(userId::toString)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"bad\",\"currentPassword\":\"\"}"))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.message").value("Validation failed"));
 
@@ -102,8 +115,11 @@ class UserControllerTest {
 
   @Test
   void updateProfileRejectsInvalidRequest() throws Exception {
-    mvc.perform(patch("/api/v1/users/me").principal(userId::toString).contentType(MediaType.APPLICATION_JSON)
-            .content("{\"displayName\":\"\"}"))
+    mvc.perform(
+            patch("/api/v1/users/me")
+                .principal(userId::toString)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"displayName\":\"\"}"))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.message").value("Validation failed"));
 

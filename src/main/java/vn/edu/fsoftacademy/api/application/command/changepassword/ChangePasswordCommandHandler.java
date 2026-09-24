@@ -1,9 +1,8 @@
 package vn.edu.fsoftacademy.api.application.command.changepassword;
 
-import vn.edu.fsoftacademy.api.application.exception.UserNotFoundException;
-
 import java.util.UUID;
 import vn.edu.fsoftacademy.api.application.exception.InvalidCredentialsException;
+import vn.edu.fsoftacademy.api.application.exception.UserNotFoundException;
 import vn.edu.fsoftacademy.api.application.port.PasswordHasher;
 import vn.edu.fsoftacademy.api.application.port.SessionTokenPort;
 import vn.edu.fsoftacademy.api.application.repository.UserRepository;
@@ -34,5 +33,4 @@ public class ChangePasswordCommandHandler {
     userRepository.save(currentUser);
     sessionTokenPort.revokeAll(currentUser.getId());
   }
-
 }

@@ -16,7 +16,12 @@ public class RefreshSession {
   }
 
   public RefreshSession(
-      UUID id, UUID userId, String tokenHash, Instant expiresAt, Instant revokedAt, Instant createdAt) {
+      UUID id,
+      UUID userId,
+      String tokenHash,
+      Instant expiresAt,
+      Instant revokedAt,
+      Instant createdAt) {
     this.id = id;
     this.userId = userId;
     this.tokenHash = tokenHash;
@@ -33,10 +38,27 @@ public class RefreshSession {
     revokedAt = Instant.now();
   }
 
-  public UUID getId() { return id; }
-  public UUID getUserId() { return userId; }
-  public String getTokenHash() { return tokenHash; }
-  public Instant getExpiresAt() { return expiresAt; }
-  public Instant getRevokedAt() { return revokedAt; }
-  public Instant getCreatedAt() { return createdAt; }
+  public UUID getId() {
+    return id;
+  }
+
+  public UUID getUserId() {
+    return userId;
+  }
+
+  public String getTokenHash() {
+    return tokenHash;
+  }
+
+  public Instant getExpiresAt() {
+    return expiresAt;
+  }
+
+  public Instant getRevokedAt() {
+    return revokedAt;
+  }
+
+  public Instant getCreatedAt() {
+    return createdAt;
+  }
 }

@@ -17,10 +17,14 @@ class UpdateProjectCommandHandlerTest {
     var repo = mock(ProjectRepository.class);
     UUID ownerId = UUID.randomUUID();
     UUID projectId = UUID.randomUUID();
-    var project = new Project(projectId, ownerId, "Old", null, java.time.Instant.now(), java.time.Instant.now());
+    var project =
+        new Project(
+            projectId, ownerId, "Old", null, java.time.Instant.now(), java.time.Instant.now());
     when(repo.findByIdAndOwnerId(projectId, ownerId)).thenReturn(Optional.of(project));
 
-    var result = new UpdateProjectCommandHandler(repo).execute(ownerId, projectId, new UpdateProjectCommand("  New  ", "Details"));
+    var result =
+        new UpdateProjectCommandHandler(repo)
+            .execute(ownerId, projectId, new UpdateProjectCommand("  New  ", "Details"));
 
     assertEquals("New", result.title());
     assertEquals("Details", result.description());
@@ -34,8 +38,11 @@ class UpdateProjectCommandHandlerTest {
     UUID projectId = UUID.randomUUID();
     when(repo.findByIdAndOwnerId(projectId, ownerId)).thenReturn(Optional.empty());
 
-    assertThrows(ProjectNotFoundException.class, () -> new UpdateProjectCommandHandler(repo)
-        .execute(ownerId, projectId, new UpdateProjectCommand("Project", null)));
+    assertThrows(
+        ProjectNotFoundException.class,
+        () ->
+            new UpdateProjectCommandHandler(repo)
+                .execute(ownerId, projectId, new UpdateProjectCommand("Project", null)));
     verify(repo, never()).save(any());
   }
 }

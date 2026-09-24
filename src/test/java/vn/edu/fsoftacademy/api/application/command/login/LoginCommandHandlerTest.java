@@ -31,7 +31,8 @@ class LoginCommandHandlerTest {
     passwords = mock(PasswordHasher.class);
     sessions = mock(SessionTokenPort.class);
     when(passwords.matches(RAW_PASSWORD, PASSWORD_HASH)).thenReturn(true);
-    when(passwords.matches(argThat(value -> !RAW_PASSWORD.equals(value)), eq(PASSWORD_HASH))).thenReturn(false);
+    when(passwords.matches(argThat(value -> !RAW_PASSWORD.equals(value)), eq(PASSWORD_HASH)))
+        .thenReturn(false);
     handler = new LoginCommandHandler(users, passwords, sessions);
   }
 
@@ -53,17 +54,26 @@ class LoginCommandHandlerTest {
   void throwsInvalidCredentialsWhenEmailUnknown() {
     when(users.findByEmail("unknown@example.com")).thenReturn(Optional.empty());
 
-    assertThrows(InvalidCredentialsException.class,
+    assertThrows(
+        InvalidCredentialsException.class,
         () -> handler.execute(new LoginCommand("unknown@example.com", RAW_PASSWORD)));
   }
 
   @Test
   void throwsInvalidCredentialsWhenAccountIsDisabled() {
-    var user = new User(UUID.randomUUID(), "alice@example.com", "Alice", PASSWORD_HASH, false, java.time.Instant.now(),
-        java.time.Instant.now());
+    var user =
+        new User(
+            UUID.randomUUID(),
+            "alice@example.com",
+            "Alice",
+            PASSWORD_HASH,
+            false,
+            java.time.Instant.now(),
+            java.time.Instant.now());
     when(users.findByEmail("alice@example.com")).thenReturn(Optional.of(user));
 
-    assertThrows(InvalidCredentialsException.class,
+    assertThrows(
+        InvalidCredentialsException.class,
         () -> handler.execute(new LoginCommand("alice@example.com", RAW_PASSWORD)));
     verify(sessions, never()).issue(any());
   }
@@ -73,13 +83,16 @@ class LoginCommandHandlerTest {
     var user = new User("alice@example.com", "Alice", PASSWORD_HASH);
     when(users.findByEmail("alice@example.com")).thenReturn(Optional.of(user));
 
-    assertThrows(InvalidCredentialsException.class,
+    assertThrows(
+        InvalidCredentialsException.class,
         () -> handler.execute(new LoginCommand("alice@example.com", "wrong")));
     verifyNoInteractions(sessions);
   }
 
   private SessionTokens session(User user) {
-    return new SessionTokens(user, new AccessToken("access-token", "Bearer", 3600L),
+    return new SessionTokens(
+        user,
+        new AccessToken("access-token", "Bearer", 3600L),
         new RefreshToken("refresh-token", 86400L));
   }
 }

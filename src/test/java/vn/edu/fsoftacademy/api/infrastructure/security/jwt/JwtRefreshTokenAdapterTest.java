@@ -7,11 +7,12 @@ import java.time.Duration;
 import org.junit.jupiter.api.Test;
 
 class JwtRefreshTokenAdapterTest {
-  private final JwtRefreshTokenAdapter refreshTokens = new JwtRefreshTokenAdapter(
-      new JwtProperties(
-          "bG9jYWwtZGV2ZWxvcG1lbnQtc2VjcmV0LW11c3QtYmUtYXQtbGVhc3QtMzItYnl0ZXM=",
-          Duration.ofMinutes(15),
-          Duration.ofDays(30)));
+  private final JwtRefreshTokenAdapter refreshTokens =
+      new JwtRefreshTokenAdapter(
+          new JwtProperties(
+              "bG9jYWwtZGV2ZWxvcG1lbnQtc2VjcmV0LW11c3QtYmUtYXQtbGVhc3QtMzItYnl0ZXM=",
+              Duration.ofMinutes(15),
+              Duration.ofDays(30)));
 
   @Test
   void issuesUniqueTokensAndHashesDeterministically() {

@@ -12,9 +12,7 @@ import vn.edu.fsoftacademy.api.application.exception.UserNotFoundException;
 @RestControllerAdvice
 public class AuthenticationExceptionHandler extends GlobalExceptionHandler {
 
-  /**
-   * Authenticated principal's account no longer exists — treat as unauthorized.
-   */
+  /** Authenticated principal's account no longer exists — treat as unauthorized. */
   @ExceptionHandler(UserNotFoundException.class)
   ResponseEntity<ApiError> userNotFound(UserNotFoundException ex) {
     return error(HttpStatus.UNAUTHORIZED, ex.getMessage(), Map.of());

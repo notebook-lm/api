@@ -16,16 +16,37 @@ public class User {
   private final Set<Role> roles;
 
   public User(String email, String displayName, String passwordHash) {
-    this(UUID.randomUUID(), email, displayName, passwordHash, true, Instant.now(), Instant.now(), Set.of());
+    this(
+        UUID.randomUUID(),
+        email,
+        displayName,
+        passwordHash,
+        true,
+        Instant.now(),
+        Instant.now(),
+        Set.of());
   }
 
-  public User(UUID id, String email, String displayName, String passwordHash, boolean enabled,
-      Instant createdAt, Instant updatedAt) {
+  public User(
+      UUID id,
+      String email,
+      String displayName,
+      String passwordHash,
+      boolean enabled,
+      Instant createdAt,
+      Instant updatedAt) {
     this(id, email, displayName, passwordHash, enabled, createdAt, updatedAt, Set.of());
   }
 
-  public User(UUID id, String email, String displayName, String passwordHash, boolean enabled,
-      Instant createdAt, Instant updatedAt, Set<Role> roles) {
+  public User(
+      UUID id,
+      String email,
+      String displayName,
+      String passwordHash,
+      boolean enabled,
+      Instant createdAt,
+      Instant updatedAt,
+      Set<Role> roles) {
     this.id = id;
     this.email = email;
     this.displayName = displayName;
@@ -92,11 +113,14 @@ public class User {
   }
 
   public Set<String> getRoleNames() {
-    return roles.stream().map(Role::getName).collect(java.util.stream.Collectors.toUnmodifiableSet());
+    return roles.stream()
+        .map(Role::getName)
+        .collect(java.util.stream.Collectors.toUnmodifiableSet());
   }
 
   public Set<String> getPermissionCodes() {
-    return roles.stream().flatMap(role -> role.getPermissionCodes().stream())
+    return roles.stream()
+        .flatMap(role -> role.getPermissionCodes().stream())
         .collect(java.util.stream.Collectors.toUnmodifiableSet());
   }
 }

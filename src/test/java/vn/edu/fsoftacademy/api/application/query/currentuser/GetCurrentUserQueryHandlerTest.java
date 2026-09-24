@@ -40,6 +40,7 @@ class GetCurrentUserQueryHandlerTest {
     UUID unknownId = UUID.randomUUID();
     when(userRepository.findById(unknownId)).thenReturn(Optional.empty());
 
-    assertThrows(UserNotFoundException.class, () -> handler.handle(new GetCurrentUserQuery(unknownId)));
+    assertThrows(
+        UserNotFoundException.class, () -> handler.handle(new GetCurrentUserQuery(unknownId)));
   }
 }

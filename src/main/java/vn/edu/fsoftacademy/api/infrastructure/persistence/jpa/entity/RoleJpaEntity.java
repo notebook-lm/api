@@ -9,15 +9,34 @@ import java.util.UUID;
 @Table(name = "roles")
 public class RoleJpaEntity {
   @Id private UUID id;
-  @Column(nullable = false, unique = true) private String name;
+
+  @Column(nullable = false, unique = true)
+  private String name;
+
   @ManyToMany(fetch = FetchType.EAGER)
-  @JoinTable(name = "role_permissions", joinColumns = @JoinColumn(name = "role_id"), inverseJoinColumns = @JoinColumn(name = "permission_id"))
+  @JoinTable(
+      name = "role_permissions",
+      joinColumns = @JoinColumn(name = "role_id"),
+      inverseJoinColumns = @JoinColumn(name = "permission_id"))
   private Set<PermissionJpaEntity> permissions = new LinkedHashSet<>();
+
   protected RoleJpaEntity() {}
+
   public RoleJpaEntity(UUID id, String name, Set<PermissionJpaEntity> permissions) {
-    this.id = id; this.name = name; this.permissions = new LinkedHashSet<>(permissions);
+    this.id = id;
+    this.name = name;
+    this.permissions = new LinkedHashSet<>(permissions);
   }
-  public UUID getId() { return id; }
-  public String getName() { return name; }
-  public Set<PermissionJpaEntity> getPermissions() { return Set.copyOf(permissions); }
+
+  public UUID getId() {
+    return id;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public Set<PermissionJpaEntity> getPermissions() {
+    return Set.copyOf(permissions);
+  }
 }

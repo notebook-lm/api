@@ -18,18 +18,23 @@ public class OpenApiConfiguration {
   @Bean
   OpenAPI notebookLmOpenApi(@Value("${server.port:8080}") int port) {
     return new OpenAPI()
-        .info(new Info()
-            .title("Notebook LM API")
-            .version("v1")
-            .description("REST API for account authentication and user profile management.")
-            .license(new License().name("Private")))
-        .addServersItem(new Server().url("http://localhost:" + port).description("Local development"))
-        .components(new Components().addSecuritySchemes(BEARER_AUTH,
-            new SecurityScheme()
-                .type(SecurityScheme.Type.HTTP)
-                .scheme("bearer")
-                .bearerFormat("JWT")
-                .description("Paste the access token returned by `/api/v1/auth/login`.")))
+        .info(
+            new Info()
+                .title("Notebook LM API")
+                .version("v1")
+                .description("REST API for account authentication and user profile management.")
+                .license(new License().name("Private")))
+        .addServersItem(
+            new Server().url("http://localhost:" + port).description("Local development"))
+        .components(
+            new Components()
+                .addSecuritySchemes(
+                    BEARER_AUTH,
+                    new SecurityScheme()
+                        .type(SecurityScheme.Type.HTTP)
+                        .scheme("bearer")
+                        .bearerFormat("JWT")
+                        .description("Paste the access token returned by `/api/v1/auth/login`.")))
         .addSecurityItem(new SecurityRequirement().addList(BEARER_AUTH));
   }
 }

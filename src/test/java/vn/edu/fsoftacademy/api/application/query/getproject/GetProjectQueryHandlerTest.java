@@ -17,8 +17,11 @@ class GetProjectQueryHandlerTest {
     var projects = mock(ProjectRepository.class);
     UUID ownerId = UUID.randomUUID();
     UUID projectId = UUID.randomUUID();
-    when(projects.findByIdAndOwnerId(projectId, ownerId)).thenReturn(Optional.of(
-        new Project(projectId, ownerId, "Notes", "Description", Instant.now(), Instant.now())));
+    when(projects.findByIdAndOwnerId(projectId, ownerId))
+        .thenReturn(
+            Optional.of(
+                new Project(
+                    projectId, ownerId, "Notes", "Description", Instant.now(), Instant.now())));
 
     var result = new GetProjectQueryHandler(projects).handle(ownerId, projectId);
 
@@ -33,7 +36,8 @@ class GetProjectQueryHandlerTest {
     UUID projectId = UUID.randomUUID();
     when(projects.findByIdAndOwnerId(projectId, ownerId)).thenReturn(Optional.empty());
 
-    assertThrows(ProjectNotFoundException.class,
+    assertThrows(
+        ProjectNotFoundException.class,
         () -> new GetProjectQueryHandler(projects).handle(ownerId, projectId));
   }
 }

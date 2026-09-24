@@ -7,17 +7,16 @@ import vn.edu.fsoftacademy.api.application.port.SessionTokenPort;
 import vn.edu.fsoftacademy.api.application.repository.UserRepository;
 import vn.edu.fsoftacademy.api.domain.entity.User;
 
-/**
- * Authenticates a user with email and password, then creates an authenticated
- * session.
- */
+/** Authenticates a user with email and password, then creates an authenticated session. */
 public class LoginCommandHandler {
   private final UserRepository userRepository;
   private final PasswordHasher passwordHasher;
   private final SessionTokenPort sessionTokenPort;
 
   public LoginCommandHandler(
-      UserRepository userRepository, PasswordHasher passwordHasher, SessionTokenPort sessionTokenPort) {
+      UserRepository userRepository,
+      PasswordHasher passwordHasher,
+      SessionTokenPort sessionTokenPort) {
     this.userRepository = userRepository;
     this.passwordHasher = passwordHasher;
     this.sessionTokenPort = sessionTokenPort;
@@ -25,9 +24,8 @@ public class LoginCommandHandler {
 
   public LoginResult execute(LoginCommand command) {
     String normalizedEmail = command.email().strip().toLowerCase(Locale.ROOT);
-    User user = userRepository
-        .findByEmail(normalizedEmail)
-        .orElseThrow(InvalidCredentialsException::new);
+    User user =
+        userRepository.findByEmail(normalizedEmail).orElseThrow(InvalidCredentialsException::new);
 
     if (!user.isEnabled()) {
       throw new InvalidCredentialsException();

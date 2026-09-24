@@ -10,4 +10,7 @@ public record ApiError(
     @Schema(example = "400") int status,
     @Schema(example = "Bad Request") String error,
     @Schema(example = "Validation failed") String message,
-    @Schema(description = "Validation messages keyed by request field", example = "{\"email\":\"must be a well-formed email address\"}") Map<String, String> fieldErrors) {}
+    @Schema(
+            description = "Validation messages keyed by request field",
+            example = "{\"email\":\"must be a well-formed email address\"}")
+        Map<String, String> fieldErrors) {}

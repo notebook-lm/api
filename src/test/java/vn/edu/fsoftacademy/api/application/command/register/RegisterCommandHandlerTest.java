@@ -40,7 +40,8 @@ class RegisterCommandHandlerTest {
   void createsUserWithNormalizedEmailAndHashedPassword() {
     when(users.existsByEmail("alice@example.com")).thenReturn(false);
 
-    var result = handler.execute(new RegisterCommand("  Alice@EXAMPLE.COM  ", "  Alice  ", RAW_PASSWORD));
+    var result =
+        handler.execute(new RegisterCommand("  Alice@EXAMPLE.COM  ", "  Alice  ", RAW_PASSWORD));
 
     assertEquals("alice@example.com", result.email());
     assertEquals("Alice", result.displayName());
@@ -51,7 +52,9 @@ class RegisterCommandHandlerTest {
   void throwsConflictWhenEmailAlreadyTaken() {
     when(users.existsByEmail("alice@example.com")).thenReturn(true);
 
-    assertThrows(ConflictException.class, () -> handler.execute(new RegisterCommand("alice@example.com", "Alice", RAW_PASSWORD)));
+    assertThrows(
+        ConflictException.class,
+        () -> handler.execute(new RegisterCommand("alice@example.com", "Alice", RAW_PASSWORD)));
 
     verify(users, never()).save(any());
   }

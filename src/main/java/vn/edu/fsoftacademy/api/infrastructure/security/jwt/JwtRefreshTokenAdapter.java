@@ -32,10 +32,10 @@ public class JwtRefreshTokenAdapter implements RefreshTokenPort {
     try {
       return Base64.getEncoder()
           .encodeToString(
-              MessageDigest.getInstance("SHA-256").digest(rawToken.getBytes(StandardCharsets.UTF_8)));
+              MessageDigest.getInstance("SHA-256")
+                  .digest(rawToken.getBytes(StandardCharsets.UTF_8)));
     } catch (NoSuchAlgorithmException exception) {
       throw new IllegalStateException("SHA-256 is unavailable", exception);
     }
   }
-
 }

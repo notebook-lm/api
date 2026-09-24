@@ -31,7 +31,8 @@ class DeleteAccountCommandHandlerTest {
     sessions = mock(SessionTokenPort.class);
     when(users.findById(user.getId())).thenReturn(Optional.of(user));
     when(passwords.matches("correct-password", PASSWORD_HASH)).thenReturn(true);
-    when(passwords.matches(argThat(value -> !"correct-password".equals(value)), eq(PASSWORD_HASH))).thenReturn(false);
+    when(passwords.matches(argThat(value -> !"correct-password".equals(value)), eq(PASSWORD_HASH)))
+        .thenReturn(false);
     handler = new DeleteAccountCommandHandler(users, passwords, sessions);
   }
 
@@ -46,7 +47,9 @@ class DeleteAccountCommandHandlerTest {
 
   @Test
   void throwsInvalidCredentialsWhenPasswordIsWrong() {
-    assertThrows(InvalidCredentialsException.class, () -> handler.execute(user.getId(), new DeleteAccountCommand("wrong")));
+    assertThrows(
+        InvalidCredentialsException.class,
+        () -> handler.execute(user.getId(), new DeleteAccountCommand("wrong")));
 
     verifyNoInteractions(sessions);
     verify(users, never()).delete(any());

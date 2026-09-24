@@ -1,4 +1,8 @@
 spring:
+  servlet:
+    multipart:
+      max-file-size: 25MB
+      max-request-size: 25MB
   application:
     name: api
   datasource:
@@ -18,6 +22,11 @@ server:
 app:
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  storage:
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    bucket: ${MINIO_BUCKET:notebook-lm}
+    access-key: ${MINIO_ACCESS_KEY:minioadmin}
+    secret-key: ${MINIO_SECRET_KEY:minioadmin}
   jwt:
     # Override this in every non-local environment with a base64-encoded 256-bit secret.
     secret: ${JWT_SECRET:bG9jYWwtZGV2ZWxvcG1lbnQtc2VjcmV0LW11c3QtYmUtYXQtbGVhc3QtMzItYnl0ZXM=}

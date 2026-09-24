@@ -1,9 +1,8 @@
 package vn.edu.fsoftacademy.api.application.command.deleteaccount;
 
-import vn.edu.fsoftacademy.api.application.exception.UserNotFoundException;
-
 import java.util.UUID;
 import vn.edu.fsoftacademy.api.application.exception.InvalidCredentialsException;
+import vn.edu.fsoftacademy.api.application.exception.UserNotFoundException;
 import vn.edu.fsoftacademy.api.application.port.PasswordHasher;
 import vn.edu.fsoftacademy.api.application.port.SessionTokenPort;
 import vn.edu.fsoftacademy.api.application.repository.UserRepository;
@@ -32,5 +31,4 @@ public class DeleteAccountCommandHandler {
     sessionTokenPort.deleteAll(currentUser.getId());
     userRepository.delete(currentUser);
   }
-
 }

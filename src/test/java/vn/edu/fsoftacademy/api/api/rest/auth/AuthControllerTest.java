@@ -34,17 +34,25 @@ class AuthControllerTest {
     login = mock(LoginCommandHandler.class);
     refresh = mock(RefreshSessionCommandHandler.class);
     logout = mock(LogoutCommandHandler.class);
-    mvc = MockMvcBuilders.standaloneSetup(new AuthController(register, login, refresh, logout))
-        .setControllerAdvice(new AuthenticationExceptionHandler(), new BusinessExceptionHandler(), new ValidationExceptionHandler())
-        .build();
+    mvc =
+        MockMvcBuilders.standaloneSetup(new AuthController(register, login, refresh, logout))
+            .setControllerAdvice(
+                new AuthenticationExceptionHandler(),
+                new BusinessExceptionHandler(),
+                new ValidationExceptionHandler())
+            .build();
   }
 
   @Test
   void registerCreatesAccountAndMapsRegistrationResponse() throws Exception {
-    when(register.execute(any())).thenReturn(new RegisterResult(UUID.randomUUID(), "user@example.com", "User"));
+    when(register.execute(any()))
+        .thenReturn(new RegisterResult(UUID.randomUUID(), "user@example.com", "User"));
 
-    mvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
-            .content("{\"email\":\"user@example.com\",\"displayName\":\"User\",\"password\":\"secret123\"}"))
+    mvc.perform(
+            post("/api/v1/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    "{\"email\":\"user@example.com\",\"displayName\":\"User\",\"password\":\"secret123\"}"))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.email").value("user@example.com"))
         .andExpect(jsonPath("$.accessToken").doesNotExist());
@@ -58,8 +66,10 @@ class AuthControllerTest {
   void loginMapsSessionResponseAndInvokesLoginHandler() throws Exception {
     when(login.execute(any())).thenReturn(loginResult());
 
-    mvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
-            .content("{\"email\":\"user@example.com\",\"password\":\"secret123\"}"))
+    mvc.perform(
+            post("/api/v1/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"user@example.com\",\"password\":\"secret123\"}"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.refreshToken").value("refresh-token"));
 
@@ -72,8 +82,10 @@ class AuthControllerTest {
   void refreshMapsSessionResponseAndInvokesRefreshHandler() throws Exception {
     when(refresh.execute(any())).thenReturn(refreshResult());
 
-    mvc.perform(post("/api/v1/auth/refresh").contentType(MediaType.APPLICATION_JSON)
-            .content("{\"refreshToken\":\"refresh-token\"}"))
+    mvc.perform(
+            post("/api/v1/auth/refresh")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"refreshToken\":\"refresh-token\"}"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.tokenType").value("Bearer"));
 
@@ -82,8 +94,10 @@ class AuthControllerTest {
 
   @Test
   void logoutReturnsNoContentAndInvokesLogoutHandler() throws Exception {
-    mvc.perform(post("/api/v1/auth/logout").contentType(MediaType.APPLICATION_JSON)
-            .content("{\"refreshToken\":\"refresh-token\"}"))
+    mvc.perform(
+            post("/api/v1/auth/logout")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"refreshToken\":\"refresh-token\"}"))
         .andExpect(status().isNoContent());
 
     verify(logout).execute(new LogoutCommand("refresh-token"));
@@ -91,8 +105,10 @@ class AuthControllerTest {
 
   @Test
   void loginRejectsInvalidRequest() throws Exception {
-    mvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
-            .content("{\"email\":\"bad\",\"password\":\"\"}"))
+    mvc.perform(
+            post("/api/v1/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"bad\",\"password\":\"\"}"))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.message").value("Validation failed"));
 
@@ -100,10 +116,24 @@ class AuthControllerTest {
   }
 
   private LoginResult loginResult() {
-    return new LoginResult(UUID.randomUUID(), "user@example.com", "User", "access-token", "refresh-token", "Bearer", 3600L);
+    return new LoginResult(
+        UUID.randomUUID(),
+        "user@example.com",
+        "User",
+        "access-token",
+        "refresh-token",
+        "Bearer",
+        3600L);
   }
 
   private RefreshSessionResult refreshResult() {
-    return new RefreshSessionResult(UUID.randomUUID(), "user@example.com", "User", "access-token", "refresh-token", "Bearer", 3600L);
+    return new RefreshSessionResult(
+        UUID.randomUUID(),
+        "user@example.com",
+        "User",
+        "access-token",
+        "refresh-token",
+        "Bearer",
+        3600L);
   }
 }

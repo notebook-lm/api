@@ -22,16 +22,19 @@ class JwtAuthenticationFilterTest {
     UUID userId = UUID.randomUUID();
     when(accessTokens.isValid("token")).thenReturn(true);
     when(accessTokens.extractUserId("token")).thenReturn(userId);
-    when(accessTokens.extractAuthorities("token")).thenReturn(java.util.List.of("ROLE_USER", "note:read"));
+    when(accessTokens.extractAuthorities("token"))
+        .thenReturn(java.util.List.of("ROLE_USER", "note:read"));
     var request = new MockHttpServletRequest();
     request.addHeader("Authorization", "Bearer token");
     var chain = mock(jakarta.servlet.FilterChain.class);
 
-    new JwtAuthenticationFilter(accessTokens).doFilter(request, new MockHttpServletResponse(), chain);
+    new JwtAuthenticationFilter(accessTokens)
+        .doFilter(request, new MockHttpServletResponse(), chain);
 
     assertEquals(userId, SecurityContextHolder.getContext().getAuthentication().getPrincipal());
-    assertTrue(SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
-        .anyMatch(authority -> authority.getAuthority().equals("ROLE_USER")));
+    assertTrue(
+        SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+            .anyMatch(authority -> authority.getAuthority().equals("ROLE_USER")));
     verify(chain).doFilter(any(), any());
   }
 
@@ -43,7 +46,8 @@ class JwtAuthenticationFilterTest {
     request.addHeader("Authorization", "Bearer bad");
     var chain = mock(jakarta.servlet.FilterChain.class);
 
-    new JwtAuthenticationFilter(accessTokens).doFilter(request, new MockHttpServletResponse(), chain);
+    new JwtAuthenticationFilter(accessTokens)
+        .doFilter(request, new MockHttpServletResponse(), chain);
 
     assertNull(SecurityContextHolder.getContext().getAuthentication());
     verify(chain).doFilter(any(), any());
