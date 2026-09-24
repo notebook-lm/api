@@ -28,7 +28,9 @@ import vn.edu.fsoftacademy.api.application.command.register.RegisterCommandHandl
 import vn.edu.fsoftacademy.api.application.command.register.RegisterResult;
 
 @RestController
-@Tag(name = "Authentication", description = "Public account registration, login and token lifecycle endpoints.")
+@Tag(
+    name = "Authentication",
+    description = "Public account registration, login and token lifecycle endpoints.")
 @RequestMapping("/api/v1/auth")
 public class AuthController {
   private final RegisterCommandHandler register;
@@ -48,12 +50,24 @@ public class AuthController {
   }
 
   @PostMapping("/register")
-  @Operation(summary = "Register an account", description = "Creates an account. Login separately to obtain tokens.")
+  @Operation(
+      summary = "Register an account",
+      description = "Creates an account. Login separately to obtain tokens.")
   @SecurityRequirements
   @ApiResponses({
-      @ApiResponse(responseCode = "201", description = "Account created", content = @Content(schema = @Schema(implementation = RegistrationResponse.class))),
-      @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content(schema = @Schema(implementation = ApiError.class))),
-      @ApiResponse(responseCode = "409", description = "Email already registered", content = @Content(schema = @Schema(implementation = ApiError.class)))})
+    @ApiResponse(
+        responseCode = "201",
+        description = "Account created",
+        content = @Content(schema = @Schema(implementation = RegistrationResponse.class))),
+    @ApiResponse(
+        responseCode = "400",
+        description = "Invalid request",
+        content = @Content(schema = @Schema(implementation = ApiError.class))),
+    @ApiResponse(
+        responseCode = "409",
+        description = "Email already registered",
+        content = @Content(schema = @Schema(implementation = ApiError.class)))
+  })
   @ResponseStatus(HttpStatus.CREATED)
   public RegistrationResponse register(@Valid @RequestBody RegisterRequest request) {
     return response(
@@ -62,23 +76,47 @@ public class AuthController {
   }
 
   @PostMapping("/login")
-  @Operation(summary = "Login", description = "Authenticates credentials and issues an access token and refresh token.")
+  @Operation(
+      summary = "Login",
+      description = "Authenticates credentials and issues an access token and refresh token.")
   @SecurityRequirements
   @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "Authenticated", content = @Content(schema = @Schema(implementation = AuthResponse.class))),
-      @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content(schema = @Schema(implementation = ApiError.class))),
-      @ApiResponse(responseCode = "401", description = "Invalid credentials", content = @Content(schema = @Schema(implementation = ApiError.class)))})
+    @ApiResponse(
+        responseCode = "200",
+        description = "Authenticated",
+        content = @Content(schema = @Schema(implementation = AuthResponse.class))),
+    @ApiResponse(
+        responseCode = "400",
+        description = "Invalid request",
+        content = @Content(schema = @Schema(implementation = ApiError.class))),
+    @ApiResponse(
+        responseCode = "401",
+        description = "Invalid credentials",
+        content = @Content(schema = @Schema(implementation = ApiError.class)))
+  })
   public AuthResponse login(@Valid @RequestBody LoginRequest request) {
     return response(login.execute(new LoginCommand(request.email(), request.password())));
   }
 
   @PostMapping("/refresh")
-  @Operation(summary = "Refresh session", description = "Rotates a valid refresh token and returns a fresh token pair.")
+  @Operation(
+      summary = "Refresh session",
+      description = "Rotates a valid refresh token and returns a fresh token pair.")
   @SecurityRequirements
   @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "Tokens refreshed", content = @Content(schema = @Schema(implementation = AuthResponse.class))),
-      @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content(schema = @Schema(implementation = ApiError.class))),
-      @ApiResponse(responseCode = "401", description = "Invalid refresh token", content = @Content(schema = @Schema(implementation = ApiError.class)))})
+    @ApiResponse(
+        responseCode = "200",
+        description = "Tokens refreshed",
+        content = @Content(schema = @Schema(implementation = AuthResponse.class))),
+    @ApiResponse(
+        responseCode = "400",
+        description = "Invalid request",
+        content = @Content(schema = @Schema(implementation = ApiError.class))),
+    @ApiResponse(
+        responseCode = "401",
+        description = "Invalid refresh token",
+        content = @Content(schema = @Schema(implementation = ApiError.class)))
+  })
   public AuthResponse refresh(@Valid @RequestBody RefreshTokenRequest request) {
     return response(refresh.execute(new RefreshSessionCommand(request.refreshToken())));
   }
@@ -87,8 +125,12 @@ public class AuthController {
   @Operation(summary = "Logout", description = "Revokes the supplied refresh token.")
   @SecurityRequirements
   @ApiResponses({
-      @ApiResponse(responseCode = "204", description = "Logged out"),
-      @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content(schema = @Schema(implementation = ApiError.class)))})
+    @ApiResponse(responseCode = "204", description = "Logged out"),
+    @ApiResponse(
+        responseCode = "400",
+        description = "Invalid request",
+        content = @Content(schema = @Schema(implementation = ApiError.class)))
+  })
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void logout(@Valid @RequestBody LogoutRequest request) {
     logout.execute(new LogoutCommand(request.refreshToken()));
@@ -96,8 +138,13 @@ public class AuthController {
 
   private AuthResponse response(LoginResult result) {
     return response(
-        result.userId(), result.email(), result.displayName(), result.accessToken(), result.refreshToken(),
-        result.tokenType(), result.expiresIn());
+        result.userId(),
+        result.email(),
+        result.displayName(),
+        result.accessToken(),
+        result.refreshToken(),
+        result.tokenType(),
+        result.expiresIn());
   }
 
   private RegistrationResponse response(RegisterResult result) {
@@ -106,8 +153,13 @@ public class AuthController {
 
   private AuthResponse response(RefreshSessionResult result) {
     return response(
-        result.userId(), result.email(), result.displayName(), result.accessToken(), result.refreshToken(),
-        result.tokenType(), result.expiresIn());
+        result.userId(),
+        result.email(),
+        result.displayName(),
+        result.accessToken(),
+        result.refreshToken(),
+        result.tokenType(),
+        result.expiresIn());
   }
 
   private AuthResponse response(

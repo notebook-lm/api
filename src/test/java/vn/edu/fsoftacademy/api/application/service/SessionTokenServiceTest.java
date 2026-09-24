@@ -22,10 +22,21 @@ import vn.edu.fsoftacademy.api.domain.entity.User;
 
 class SessionTokenServiceTest {
   private final InMemoryRefreshSessionRepository sessions = new InMemoryRefreshSessionRepository();
-  private final User user = new User(UUID.randomUUID(), "user@example.com", "User", "hash", true, Instant.now(),
-      Instant.now());
-  private final SessionTokenService service = new SessionTokenService(
-      new FakeAccessTokens(), new FakeRefreshTokens(), sessions, new SingleUserRepository(user));
+  private final User user =
+      new User(
+          UUID.randomUUID(),
+          "user@example.com",
+          "User",
+          "hash",
+          true,
+          Instant.now(),
+          Instant.now());
+  private final SessionTokenService service =
+      new SessionTokenService(
+          new FakeAccessTokens(),
+          new FakeRefreshTokens(),
+          sessions,
+          new SingleUserRepository(user));
 
   @Test
   void issuesAccessTokenAndPersistsOnlyRefreshTokenHash() {
@@ -62,8 +73,7 @@ class SessionTokenServiceTest {
 
   @Test
   void rejectsExpiredRefreshSessionWithoutIssuingANewSession() {
-    sessions.save(new RefreshSession(
-        user.getId(), "hash-expired", Instant.now().minusSeconds(1)));
+    sessions.save(new RefreshSession(user.getId(), "hash-expired", Instant.now().minusSeconds(1)));
 
     assertThrows(InvalidRefreshTokenException.class, () -> service.rotate("expired"));
 
@@ -74,8 +84,8 @@ class SessionTokenServiceTest {
   @Test
   void rejectsRefreshSessionWhenItsUserNoLongerExists() {
     UUID removedUserId = UUID.randomUUID();
-    RefreshSession session = new RefreshSession(
-        removedUserId, "hash-removed-user", Instant.now().plusSeconds(3600));
+    RefreshSession session =
+        new RefreshSession(removedUserId, "hash-removed-user", Instant.now().plusSeconds(3600));
     sessions.save(session);
 
     assertThrows(InvalidRefreshTokenException.class, () -> service.rotate("removed-user"));
@@ -99,12 +109,14 @@ class SessionTokenServiceTest {
 
     service.revokeAll(user.getId());
 
-    assertTrue(sessions.tokens.stream()
-        .filter(session -> session.getUserId().equals(user.getId()))
-        .noneMatch(RefreshSession::isActive));
-    assertTrue(sessions.tokens.stream()
-        .filter(session -> session.getUserId().equals(anotherUser.getId()))
-        .allMatch(RefreshSession::isActive));
+    assertTrue(
+        sessions.tokens.stream()
+            .filter(session -> session.getUserId().equals(user.getId()))
+            .noneMatch(RefreshSession::isActive));
+    assertTrue(
+        sessions.tokens.stream()
+            .filter(session -> session.getUserId().equals(anotherUser.getId()))
+            .allMatch(RefreshSession::isActive));
   }
 
   @Test
@@ -120,7 +132,11 @@ class SessionTokenServiceTest {
   }
 
   private static class FakeAccessTokens implements AccessTokenPort {
-    public AccessToken issue(UUID userId, String email, java.util.Collection<String> roles, java.util.Collection<String> permissions) {
+    public AccessToken issue(
+        UUID userId,
+        String email,
+        java.util.Collection<String> roles,
+        java.util.Collection<String> permissions) {
       return new AccessToken("access-" + userId, "Bearer", 900);
     }
 
@@ -141,7 +157,8 @@ class SessionTokenServiceTest {
     private int sequence;
 
     public vn.edu.fsoftacademy.api.application.model.RefreshToken issue() {
-      return new vn.edu.fsoftacademy.api.application.model.RefreshToken("refresh-" + ++sequence, 3600);
+      return new vn.edu.fsoftacademy.api.application.model.RefreshToken(
+          "refresh-" + ++sequence, 3600);
     }
 
     public String hash(String rawToken) {
@@ -161,8 +178,7 @@ class SessionTokenServiceTest {
     }
 
     public RefreshSession save(RefreshSession token) {
-      if (!tokens.contains(token))
-        tokens.add(token);
+      if (!tokens.contains(token)) tokens.add(token);
       return token;
     }
 
@@ -194,7 +210,6 @@ class SessionTokenServiceTest {
       return savedUser;
     }
 
-    public void delete(User deletedUser) {
-    }
+    public void delete(User deletedUser) {}
   }
 }

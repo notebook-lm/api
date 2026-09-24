@@ -16,6 +16,7 @@ class BusinessExceptionHandlerTest {
     assertEquals(409, response.getStatusCode().value());
     assertEquals("Email already used", response.getBody().message());
   }
+
   @Test
   void mapsProjectNotFoundToNotFoundResponse() {
     var response = handler.projectNotFound(new ProjectNotFoundException());

@@ -46,7 +46,8 @@ class JpaRefreshSessionAdapterTest {
 
     RefreshSession saved = adapter.save(session);
 
-    ArgumentCaptor<RefreshSessionJpaEntity> captor = ArgumentCaptor.forClass(RefreshSessionJpaEntity.class);
+    ArgumentCaptor<RefreshSessionJpaEntity> captor =
+        ArgumentCaptor.forClass(RefreshSessionJpaEntity.class);
     verify(repository).save(captor.capture());
     assertSame(session, saved);
     assertEquals(session.getId(), captor.getValue().getId());
@@ -62,12 +63,18 @@ class JpaRefreshSessionAdapterTest {
 
   private RefreshSessionJpaEntity entity() {
     RefreshSession session = domainSession();
-    return new RefreshSessionJpaEntity(session.getId(), session.getUserId(), session.getTokenHash(),
-        session.getExpiresAt(), session.getRevokedAt(), session.getCreatedAt());
+    return new RefreshSessionJpaEntity(
+        session.getId(),
+        session.getUserId(),
+        session.getTokenHash(),
+        session.getExpiresAt(),
+        session.getRevokedAt(),
+        session.getCreatedAt());
   }
 
   private RefreshSession domainSession() {
     Instant now = Instant.now();
-    return new RefreshSession(UUID.randomUUID(), UUID.randomUUID(), "hash", now.plusSeconds(3600), null, now);
+    return new RefreshSession(
+        UUID.randomUUID(), UUID.randomUUID(), "hash", now.plusSeconds(3600), null, now);
   }
 }

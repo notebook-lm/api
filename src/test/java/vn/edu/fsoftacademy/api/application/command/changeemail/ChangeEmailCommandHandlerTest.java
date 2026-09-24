@@ -33,7 +33,8 @@ class ChangeEmailCommandHandlerTest {
     when(users.findById(user.getId())).thenReturn(Optional.of(user));
     when(users.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
     when(passwords.matches("correct-password", PASSWORD_HASH)).thenReturn(true);
-    when(passwords.matches(argThat(value -> !"correct-password".equals(value)), eq(PASSWORD_HASH))).thenReturn(false);
+    when(passwords.matches(argThat(value -> !"correct-password".equals(value)), eq(PASSWORD_HASH)))
+        .thenReturn(false);
     handler = new ChangeEmailCommandHandler(users, passwords, sessions);
   }
 
@@ -41,7 +42,9 @@ class ChangeEmailCommandHandlerTest {
   void updatesAndRevokesSessionsOnSuccess() {
     when(users.existsByEmail("newemail@example.com")).thenReturn(false);
 
-    var result = handler.execute(user.getId(), new ChangeEmailCommand("  NewEmail@EXAMPLE.COM  ", "correct-password"));
+    var result =
+        handler.execute(
+            user.getId(), new ChangeEmailCommand("  NewEmail@EXAMPLE.COM  ", "correct-password"));
 
     assertEquals("newemail@example.com", result.email());
     verify(users).save(user);
@@ -50,7 +53,9 @@ class ChangeEmailCommandHandlerTest {
 
   @Test
   void throwsInvalidCredentialsWhenPasswordIsWrong() {
-    assertThrows(InvalidCredentialsException.class, () -> handler.execute(user.getId(), new ChangeEmailCommand("new@example.com", "wrong")));
+    assertThrows(
+        InvalidCredentialsException.class,
+        () -> handler.execute(user.getId(), new ChangeEmailCommand("new@example.com", "wrong")));
 
     verifyNoInteractions(sessions);
   }
@@ -59,14 +64,20 @@ class ChangeEmailCommandHandlerTest {
   void throwsConflictWhenEmailTakenByAnotherAccount() {
     when(users.existsByEmail("taken@example.com")).thenReturn(true);
 
-    assertThrows(ConflictException.class, () -> handler.execute(user.getId(), new ChangeEmailCommand("taken@example.com", "correct-password")));
+    assertThrows(
+        ConflictException.class,
+        () ->
+            handler.execute(
+                user.getId(), new ChangeEmailCommand("taken@example.com", "correct-password")));
 
     verify(users, never()).save(any());
   }
 
   @Test
   void allowsSameEmailWithoutConflict() {
-    var result = handler.execute(user.getId(), new ChangeEmailCommand("user@example.com", "correct-password"));
+    var result =
+        handler.execute(
+            user.getId(), new ChangeEmailCommand("user@example.com", "correct-password"));
 
     assertEquals("user@example.com", result.email());
     verify(sessions).revokeAll(user.getId());

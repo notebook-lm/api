@@ -10,9 +10,22 @@ import java.util.UUID;
 @Table(name = "permissions")
 public class PermissionJpaEntity {
   @Id private UUID id;
-  @Column(nullable = false, unique = true) private String code;
+
+  @Column(nullable = false, unique = true)
+  private String code;
+
   protected PermissionJpaEntity() {}
-  public PermissionJpaEntity(UUID id, String code) { this.id = id; this.code = code; }
-  public UUID getId() { return id; }
-  public String getCode() { return code; }
+
+  public PermissionJpaEntity(UUID id, String code) {
+    this.id = id;
+    this.code = code;
+  }
+
+  public UUID getId() {
+    return id;
+  }
+
+  public String getCode() {
+    return code;
+  }
 }

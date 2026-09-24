@@ -1,8 +1,7 @@
 package vn.edu.fsoftacademy.api.application.command.updateprofile;
 
-import vn.edu.fsoftacademy.api.application.exception.UserNotFoundException;
-
 import java.util.UUID;
+import vn.edu.fsoftacademy.api.application.exception.UserNotFoundException;
 import vn.edu.fsoftacademy.api.application.repository.UserRepository;
 
 /** Updates the display name of the authenticated user. */
@@ -20,6 +19,7 @@ public class UpdateProfileCommandHandler {
     currentUser.updateDisplayName(displayName);
     userRepository.save(currentUser);
 
-    return new UpdateProfileResult(currentUser.getId(), currentUser.getEmail(), currentUser.getDisplayName());
+    return new UpdateProfileResult(
+        currentUser.getId(), currentUser.getEmail(), currentUser.getDisplayName());
   }
 }

@@ -44,9 +44,10 @@ public class SessionTokenService implements SessionTokenPort {
 
   @Override
   public SessionTokens rotate(String rawRefreshToken) {
-    RefreshSession session = sessions
-        .findByTokenHash(refreshTokens.hash(rawRefreshToken))
-        .orElseThrow(InvalidRefreshTokenException::new);
+    RefreshSession session =
+        sessions
+            .findByTokenHash(refreshTokens.hash(rawRefreshToken))
+            .orElseThrow(InvalidRefreshTokenException::new);
     if (!session.isActive()) {
       throw new InvalidRefreshTokenException();
     }
@@ -84,8 +85,9 @@ public class SessionTokenService implements SessionTokenPort {
   }
 
   private SessionTokens sessionTokens(User user, RefreshToken refreshToken) {
-    AccessToken accessToken = accessTokens.issue(user.getId(), user.getEmail(), user.getRoleNames(),
-        user.getPermissionCodes());
+    AccessToken accessToken =
+        accessTokens.issue(
+            user.getId(), user.getEmail(), user.getRoleNames(), user.getPermissionCodes());
     return new SessionTokens(user, accessToken, refreshToken);
   }
 }

@@ -68,12 +68,19 @@ class JpaUserAccountAdapterTest {
 
   private UserJpaEntity entity() {
     User user = domainUser();
-    return new UserJpaEntity(user.getId(), user.getEmail(), user.getDisplayName(), user.getPasswordHash(),
-        user.isEnabled(), user.getCreatedAt(), user.getUpdatedAt());
+    return new UserJpaEntity(
+        user.getId(),
+        user.getEmail(),
+        user.getDisplayName(),
+        user.getPasswordHash(),
+        user.isEnabled(),
+        user.getCreatedAt(),
+        user.getUpdatedAt());
   }
 
   private User domainUser() {
     Instant now = Instant.now();
-    return new User(UUID.randomUUID(), "user@example.com", "User", "hash", true, now.minusSeconds(1), now);
+    return new User(
+        UUID.randomUUID(), "user@example.com", "User", "hash", true, now.minusSeconds(1), now);
   }
 }

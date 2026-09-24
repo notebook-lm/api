@@ -19,9 +19,17 @@ public class Role {
     this.permissions = Set.copyOf(permissions);
   }
 
-  public UUID getId() { return id; }
-  public String getName() { return name; }
-  public Set<Permission> getPermissions() { return permissions; }
+  public UUID getId() {
+    return id;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public Set<Permission> getPermissions() {
+    return permissions;
+  }
 
   public Set<String> getPermissionCodes() {
     Set<String> codes = new LinkedHashSet<>();

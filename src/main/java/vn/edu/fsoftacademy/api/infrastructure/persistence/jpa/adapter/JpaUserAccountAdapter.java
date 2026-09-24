@@ -16,26 +16,71 @@ import vn.edu.fsoftacademy.api.infrastructure.persistence.jpa.repository.UserJpa
 @Repository
 public class JpaUserAccountAdapter implements UserRepository {
   private final UserJpaRepository repo;
-  public JpaUserAccountAdapter(UserJpaRepository repo) { this.repo = repo; }
-  public Optional<User> findById(UUID id) { return repo.findById(id).map(this::toDomain); }
-  public Optional<User> findByEmail(String email) { return repo.findByEmail(email).map(this::toDomain); }
-  public boolean existsByEmail(String email) { return repo.existsByEmail(email); }
-  public User save(User user) { repo.save(toEntity(user)); return user; }
-  public void delete(User user) { repo.deleteById(user.getId()); }
+
+  public JpaUserAccountAdapter(UserJpaRepository repo) {
+    this.repo = repo;
+  }
+
+  public Optional<User> findById(UUID id) {
+    return repo.findById(id).map(this::toDomain);
+  }
+
+  public Optional<User> findByEmail(String email) {
+    return repo.findByEmail(email).map(this::toDomain);
+  }
+
+  public boolean existsByEmail(String email) {
+    return repo.existsByEmail(email);
+  }
+
+  public User save(User user) {
+    repo.save(toEntity(user));
+    return user;
+  }
+
+  public void delete(User user) {
+    repo.deleteById(user.getId());
+  }
+
   private User toDomain(UserJpaEntity e) {
-    return new User(e.getId(), e.getEmail(), e.getDisplayName(), e.getPasswordHash(), e.isEnabled(), e.getCreatedAt(), e.getUpdatedAt(),
+    return new User(
+        e.getId(),
+        e.getEmail(),
+        e.getDisplayName(),
+        e.getPasswordHash(),
+        e.isEnabled(),
+        e.getCreatedAt(),
+        e.getUpdatedAt(),
         e.getRoles().stream().map(this::toRole).collect(Collectors.toSet()));
   }
+
   private Role toRole(RoleJpaEntity role) {
-    return new Role(role.getId(), role.getName(), role.getPermissions().stream()
-        .map(permission -> new Permission(permission.getId(), permission.getCode())).collect(Collectors.toSet()));
+    return new Role(
+        role.getId(),
+        role.getName(),
+        role.getPermissions().stream()
+            .map(permission -> new Permission(permission.getId(), permission.getCode()))
+            .collect(Collectors.toSet()));
   }
+
   private UserJpaEntity toEntity(User user) {
-    return new UserJpaEntity(user.getId(), user.getEmail(), user.getDisplayName(), user.getPasswordHash(), user.isEnabled(), user.getCreatedAt(), user.getUpdatedAt(),
+    return new UserJpaEntity(
+        user.getId(),
+        user.getEmail(),
+        user.getDisplayName(),
+        user.getPasswordHash(),
+        user.isEnabled(),
+        user.getCreatedAt(),
+        user.getUpdatedAt(),
         user.getRoles().stream().map(this::toRoleEntity).collect(Collectors.toSet()));
   }
+
   private RoleJpaEntity toRoleEntity(Role role) {
-    return new RoleJpaEntity(role.getId(), role.getName(), role.getPermissions().stream()
-        .map(permission -> new PermissionJpaEntity(permission.id(), permission.code())).collect(Collectors.toSet()));
+    return new RoleJpaEntity(
+        role.getId(),
+        role.getName(),
+        role.getPermissions().stream()
+            .map(permission -> new PermissionJpaEntity(permission.id(), permission.code()))
+            .collect(Collectors.toSet()));
   }
 }

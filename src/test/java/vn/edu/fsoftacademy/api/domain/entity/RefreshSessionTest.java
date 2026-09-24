@@ -12,7 +12,8 @@ class RefreshSessionTest {
 
   @Test
   void activeSessionIsActiveUntilItIsRevokedOrExpires() {
-    var session = new RefreshSession(UUID.randomUUID(), "token-hash", Instant.now().plusSeconds(60));
+    var session =
+        new RefreshSession(UUID.randomUUID(), "token-hash", Instant.now().plusSeconds(60));
 
     assertTrue(session.isActive());
 
@@ -24,7 +25,8 @@ class RefreshSessionTest {
 
   @Test
   void expiredSessionIsInactive() {
-    var session = new RefreshSession(UUID.randomUUID(), "token-hash", Instant.now().minusSeconds(1));
+    var session =
+        new RefreshSession(UUID.randomUUID(), "token-hash", Instant.now().minusSeconds(1));
 
     assertFalse(session.isActive());
   }

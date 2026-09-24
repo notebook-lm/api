@@ -20,7 +20,7 @@ public class DatabaseUserDetailsService implements UserDetailsService {
     return org.springframework.security.core.userdetails.User.withUsername(user.getEmail())
         .password(user.getPasswordHash())
         .disabled(!user.isEnabled())
-.authorities(
+        .authorities(
             java.util.stream.Stream.concat(
                     user.getRoleNames().stream().map(role -> "ROLE_" + role),
                     user.getPermissionCodes().stream())

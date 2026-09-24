@@ -17,7 +17,9 @@ class JwtAccessTokenAdapterTest {
   void issuesValidBearerTokenWithConfiguredTtl() {
     UUID userId = UUID.randomUUID();
 
-    var token = accessTokens.issue(userId, "user@example.com", java.util.List.of("USER"), java.util.List.of("note:read"));
+    var token =
+        accessTokens.issue(
+            userId, "user@example.com", java.util.List.of("USER"), java.util.List.of("note:read"));
 
     assertEquals("Bearer", token.tokenType());
     assertEquals(900L, token.expiresIn());
@@ -27,11 +29,12 @@ class JwtAccessTokenAdapterTest {
 
   @Test
   void extractsRoleAndPermissionClaimsAsSpringAuthorities() {
-    var token = accessTokens.issue(
-        UUID.randomUUID(),
-        "user@example.com",
-        java.util.List.of("USER"),
-        java.util.List.of("user:self:read", "user:self:update"));
+    var token =
+        accessTokens.issue(
+            UUID.randomUUID(),
+            "user@example.com",
+            java.util.List.of("USER"),
+            java.util.List.of("user:self:read", "user:self:update"));
 
     assertEquals(
         java.util.Set.of("ROLE_USER", "user:self:read", "user:self:update"),
@@ -40,14 +43,18 @@ class JwtAccessTokenAdapterTest {
 
   @Test
   void rejectsMalformedTamperedAndForeignTokens() {
-    var token = accessTokens.issue(UUID.randomUUID(), "user@example.com", java.util.List.of("USER"), java.util.List.of());
+    var token =
+        accessTokens.issue(
+            UUID.randomUUID(), "user@example.com", java.util.List.of("USER"), java.util.List.of());
     var otherAccessTokens =
         new JwtAccessTokenAdapter(
             new JwtProperties(
                 "YW5vdGhlci1kZXZlbG9wbWVudC1zZWNyZXQtbXVzdC1iZS1hdC1sZWFzdC0zMi1ieXRlcw==",
                 Duration.ofMinutes(15),
                 Duration.ofDays(30)));
-    var foreignToken = otherAccessTokens.issue(UUID.randomUUID(), "user@example.com", java.util.List.of("USER"), java.util.List.of());
+    var foreignToken =
+        otherAccessTokens.issue(
+            UUID.randomUUID(), "user@example.com", java.util.List.of("USER"), java.util.List.of());
 
     assertFalse(accessTokens.isValid("not-a-jwt"));
     assertFalse(accessTokens.isValid(token.value() + "tampered"));

@@ -15,7 +15,13 @@ public class Project {
     this(UUID.randomUUID(), ownerId, title, description, Instant.now(), Instant.now());
   }
 
-  public Project(UUID id, UUID ownerId, String title, String description, Instant createdAt, Instant updatedAt) {
+  public Project(
+      UUID id,
+      UUID ownerId,
+      String title,
+      String description,
+      Instant createdAt,
+      Instant updatedAt) {
     this.id = id;
     this.ownerId = ownerId;
     this.title = title;
@@ -30,10 +36,27 @@ public class Project {
     this.updatedAt = Instant.now();
   }
 
-  public UUID getId() { return id; }
-  public UUID getOwnerId() { return ownerId; }
-  public String getTitle() { return title; }
-  public String getDescription() { return description; }
-  public Instant getCreatedAt() { return createdAt; }
-  public Instant getUpdatedAt() { return updatedAt; }
+  public UUID getId() {
+    return id;
+  }
+
+  public UUID getOwnerId() {
+    return ownerId;
+  }
+
+  public String getTitle() {
+    return title;
+  }
+
+  public String getDescription() {
+    return description;
+  }
+
+  public Instant getCreatedAt() {
+    return createdAt;
+  }
+
+  public Instant getUpdatedAt() {
+    return updatedAt;
+  }
 }

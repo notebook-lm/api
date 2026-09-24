@@ -12,7 +12,9 @@ public class GetCurrentUserQueryHandler {
   }
 
   public GetCurrentUserResult handle(GetCurrentUserQuery query) {
-    var currentUser = userRepository.findById(query.userId()).orElseThrow(UserNotFoundException::new);
-    return new GetCurrentUserResult(currentUser.getId(), currentUser.getEmail(), currentUser.getDisplayName());
+    var currentUser =
+        userRepository.findById(query.userId()).orElseThrow(UserNotFoundException::new);
+    return new GetCurrentUserResult(
+        currentUser.getId(), currentUser.getEmail(), currentUser.getDisplayName());
   }
 }

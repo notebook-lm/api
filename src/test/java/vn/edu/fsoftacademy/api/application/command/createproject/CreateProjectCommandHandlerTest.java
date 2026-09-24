@@ -16,8 +16,9 @@ class CreateProjectCommandHandlerTest {
     UUID ownerId = UUID.randomUUID();
     when(projects.save(any(Project.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-    var result = new CreateProjectCommandHandler(projects)
-        .execute(ownerId, new CreateProjectCommand("  Research notes  ", "Sources"));
+    var result =
+        new CreateProjectCommandHandler(projects)
+            .execute(ownerId, new CreateProjectCommand("  Research notes  ", "Sources"));
 
     ArgumentCaptor<Project> captor = ArgumentCaptor.forClass(Project.class);
     verify(projects).save(captor.capture());

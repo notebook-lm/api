@@ -25,11 +25,19 @@ public class JwtAccessTokenAdapter implements AccessTokenPort {
   }
 
   @Override
-  public AccessToken issue(UUID userId, String email, Collection<String> roles, Collection<String> permissions) {
+  public AccessToken issue(
+      UUID userId, String email, Collection<String> roles, Collection<String> permissions) {
     Instant now = Instant.now();
-    String token = Jwts.builder().subject(userId.toString()).claim("email", email)
-        .claim(ROLES_CLAIM, roles).claim(PERMISSIONS_CLAIM, permissions).issuedAt(Date.from(now))
-        .expiration(Date.from(now.plus(properties.accessTokenTtl()))).signWith(signingKey()).compact();
+    String token =
+        Jwts.builder()
+            .subject(userId.toString())
+            .claim("email", email)
+            .claim(ROLES_CLAIM, roles)
+            .claim(PERMISSIONS_CLAIM, permissions)
+            .issuedAt(Date.from(now))
+            .expiration(Date.from(now.plus(properties.accessTokenTtl())))
+            .signWith(signingKey())
+            .compact();
     return new AccessToken(token, "Bearer", properties.accessTokenTtl().toSeconds());
   }
 
@@ -59,8 +67,7 @@ public class JwtAccessTokenAdapter implements AccessTokenPort {
 
   private Collection<String> claimValues(Claims claims, String claim) {
     Object value = claims.get(claim);
-    if (!(value instanceof Collection<?> values))
-      return java.util.List.of();
+    if (!(value instanceof Collection<?> values)) return java.util.List.of();
     return values.stream().filter(String.class::isInstance).map(String.class::cast).toList();
   }
 

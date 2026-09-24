@@ -3,6 +3,11 @@ services:
     ports:
       - "${DB_PORT:-5432}:5432"
 
+  minio:
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+
   flyway:
     image: flyway/flyway:11-alpine
     command: migrate
@@ -37,6 +42,10 @@ services:
       JWT_SECRET: ${JWT_SECRET:-bG9jYWwtZGV2ZWxvcG1lbnQtc2VjcmV0LW11c3QtYmUtYXQtbGVhc3QtMzItYnl0ZXM=}
       JWT_ACCESS_TOKEN_TTL: ${JWT_ACCESS_TOKEN_TTL:-PT15M}
       JWT_REFRESH_TOKEN_TTL: ${JWT_REFRESH_TOKEN_TTL:-P30D}
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_BUCKET: ${MINIO_BUCKET:-notebook-lm}
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
     volumes:
       - .:/workspace
       - gradle-cache:/root/.gradle

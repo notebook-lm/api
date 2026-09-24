@@ -12,10 +12,22 @@ import vn.edu.fsoftacademy.api.infrastructure.persistence.jpa.repository.RoleJpa
 @Repository
 public class JpaRoleAdapter implements RoleRepository {
   private final RoleJpaRepository roles;
-  public JpaRoleAdapter(RoleJpaRepository roles) { this.roles = roles; }
-  @Override public Optional<Role> findByName(String name) { return roles.findByName(name).map(this::toDomain); }
+
+  public JpaRoleAdapter(RoleJpaRepository roles) {
+    this.roles = roles;
+  }
+
+  @Override
+  public Optional<Role> findByName(String name) {
+    return roles.findByName(name).map(this::toDomain);
+  }
+
   private Role toDomain(RoleJpaEntity role) {
-    return new Role(role.getId(), role.getName(), role.getPermissions().stream()
-        .map(permission -> new Permission(permission.getId(), permission.getCode())).collect(Collectors.toSet()));
+    return new Role(
+        role.getId(),
+        role.getName(),
+        role.getPermissions().stream()
+            .map(permission -> new Permission(permission.getId(), permission.getCode()))
+            .collect(Collectors.toSet()));
   }
 }

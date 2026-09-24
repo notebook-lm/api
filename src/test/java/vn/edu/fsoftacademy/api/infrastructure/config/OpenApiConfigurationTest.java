@@ -12,9 +12,15 @@ class OpenApiConfigurationTest {
 
     assertEquals("Notebook LM API", openApi.getInfo().getTitle());
     assertEquals("http://localhost:8080", openApi.getServers().getFirst().getUrl());
-    assertEquals("bearer", openApi.getComponents().getSecuritySchemes()
-        .get(OpenApiConfiguration.BEARER_AUTH).getScheme());
-    assertTrue(openApi.getSecurity().stream().anyMatch(requirement ->
-        requirement.containsKey(OpenApiConfiguration.BEARER_AUTH)));
+    assertEquals(
+        "bearer",
+        openApi
+            .getComponents()
+            .getSecuritySchemes()
+            .get(OpenApiConfiguration.BEARER_AUTH)
+            .getScheme());
+    assertTrue(
+        openApi.getSecurity().stream()
+            .anyMatch(requirement -> requirement.containsKey(OpenApiConfiguration.BEARER_AUTH)));
   }
 }

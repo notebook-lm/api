@@ -10,7 +10,8 @@ class ProjectTest {
   @Test
   void updateChangesMutableFieldsAndTimestamp() {
     Instant created = Instant.parse("2026-01-01T00:00:00Z");
-    var project = new Project(UUID.randomUUID(), UUID.randomUUID(), "Initial", null, created, created);
+    var project =
+        new Project(UUID.randomUUID(), UUID.randomUUID(), "Initial", null, created, created);
 
     project.update("Updated", "Description");
 
