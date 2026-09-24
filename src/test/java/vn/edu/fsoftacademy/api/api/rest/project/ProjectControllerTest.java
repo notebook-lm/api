@@ -83,8 +83,8 @@ class ProjectControllerTest {
     Instant now = Instant.now();
     when(list.handle(eq(ownerId), any()))
         .thenReturn(
-            new ProjectPage(
-                List.of(new ListProjectsResult(projectId, "Notes", null, now, now)),
+            new ListProjectsResult(
+                List.of(new ListProjectsResult.Item(projectId, "Notes", null, now, now)),
                 1,
                 10,
                 11,

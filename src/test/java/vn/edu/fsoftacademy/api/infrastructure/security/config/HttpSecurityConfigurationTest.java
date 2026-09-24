@@ -132,7 +132,7 @@ class HttpSecurityConfigurationTest {
     when(listProjects.handle(
             org.mockito.ArgumentMatchers.eq(userId), org.mockito.ArgumentMatchers.any()))
         .thenReturn(
-            new vn.edu.fsoftacademy.api.application.query.listprojects.ProjectPage(
+            new vn.edu.fsoftacademy.api.application.query.listprojects.ListProjectsResult(
                 List.of(), 0, 20, 0, 0, false, false));
 
     mvc.perform(

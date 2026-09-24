@@ -10,18 +10,18 @@ public class ListProjectsQueryHandler {
     this.projects = projects;
   }
 
-  public ProjectPage handle(UUID ownerId, ListProjectsQuery query) {
+  public ListProjectsResult handle(UUID ownerId, ListProjectsQuery query) {
     if (query.createdFrom() != null
         && query.createdTo() != null
         && query.createdFrom().isAfter(query.createdTo())) {
       throw new IllegalArgumentException("createdFrom must be before or equal to createdTo");
     }
     var page = projects.findPageByOwnerId(ownerId, query);
-    return new ProjectPage(
+    return new ListProjectsResult(
         page.items().stream()
             .map(
                 project ->
-                    new ListProjectsResult(
+                    new ListProjectsResult.Item(
                         project.getId(),
                         project.getTitle(),
                         project.getDescription(),

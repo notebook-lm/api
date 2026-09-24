@@ -36,6 +36,7 @@ import vn.edu.fsoftacademy.api.application.query.getproject.GetProjectResult;
 import vn.edu.fsoftacademy.api.application.query.listprojects.ListProjectsQuery;
 import vn.edu.fsoftacademy.api.application.query.listprojects.ListProjectsQueryHandler;
 import vn.edu.fsoftacademy.api.application.query.listprojects.ListProjectsResult;
+import vn.edu.fsoftacademy.api.application.query.listprojects.ListProjectsResult.Item;
 import vn.edu.fsoftacademy.api.application.query.listprojects.ProjectSortField;
 import vn.edu.fsoftacademy.api.application.query.listprojects.SortDirection;
 
@@ -159,7 +160,7 @@ public class ProjectController {
         result.id(), result.title(), result.description(), result.createdAt(), result.updatedAt());
   }
 
-  private ProjectResponse response(ListProjectsResult result) {
+  private ProjectResponse response(Item result) {
     return new ProjectResponse(
         result.id(), result.title(), result.description(), result.createdAt(), result.updatedAt());
   }
