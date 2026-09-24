@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import vn.edu.fsoftacademy.api.api.rest.document.dto.request.UpdateDocumentRequest;
 import vn.edu.fsoftacademy.api.api.rest.document.dto.response.ProjectDocumentResponse;
+import vn.edu.fsoftacademy.api.api.rest.shared.util.FileUploadUtils;
 import vn.edu.fsoftacademy.api.application.command.deletedocument.DeleteDocumentCommandHandler;
 import vn.edu.fsoftacademy.api.application.command.updatedocument.*;
 import vn.edu.fsoftacademy.api.application.command.uploaddocument.*;
@@ -58,23 +59,27 @@ public class ProjectDocumentController {
       @RequestPart MultipartFile file,
       @RequestParam(required = false) String title)
       throws Exception {
-    if (file.isEmpty()) throw new IllegalArgumentException("file must not be empty");
+    if (file.isEmpty())
+      throw new IllegalArgumentException("file must not be empty");
     String filename = file.getOriginalFilename() == null ? "document" : file.getOriginalFilename();
+    if (!FileUploadUtils.isSupportedDocumentExtension(filename)) {
+      throw new IllegalArgumentException(
+          "Unsupported file type. Allowed types: PDF, DOCX, DOC, XLSX, XLS, PPTX, PPT, Markdown, TXT");
+    }
     String resolvedTitle = title == null || title.isBlank() ? filename : title.trim();
     if (resolvedTitle.length() > 255)
       throw new IllegalArgumentException("title must be at most 255 characters");
-    var r =
-        upload.execute(
-            ownerId,
-            projectId,
-            new UploadDocumentCommand(
-                resolvedTitle,
-                filename,
-                file.getContentType() == null
-                    ? MediaType.APPLICATION_OCTET_STREAM_VALUE
-                    : file.getContentType(),
-                file.getSize(),
-                file.getInputStream()));
+    var r = upload.execute(
+        ownerId,
+        projectId,
+        new UploadDocumentCommand(
+            resolvedTitle,
+            filename,
+            file.getContentType() == null
+                ? MediaType.APPLICATION_OCTET_STREAM_VALUE
+                : file.getContentType(),
+            file.getSize(),
+            file.getInputStream()));
     return response(r);
   }
 

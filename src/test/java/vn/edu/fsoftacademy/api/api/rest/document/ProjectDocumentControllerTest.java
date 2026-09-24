@@ -64,6 +64,21 @@ class ProjectDocumentControllerTest {
   }
 
   @Test
+  void uploadRejectsUnsupportedFileExtension() {
+    var file =
+        new MockMultipartFile("file", "malware.exe", "application/octet-stream", new byte[] {1});
+
+    var exception =
+        org.junit.jupiter.api.Assertions.assertThrows(
+            IllegalArgumentException.class, () -> controller.upload(ownerId, projectId, file, null));
+
+    assertEquals(
+        "Unsupported file type. Allowed types: PDF, DOCX, DOC, XLSX, XLS, PPTX, PPT, Markdown, TXT",
+        exception.getMessage());
+    verifyNoInteractions(upload);
+  }
+
+  @Test
   void listUpdateDeleteUseProjectScopedAuthenticatedCalls() {
     var d = document();
     when(list.handle(ownerId, projectId)).thenReturn(List.of(d));
