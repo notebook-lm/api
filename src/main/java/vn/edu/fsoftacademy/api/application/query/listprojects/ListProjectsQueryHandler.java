@@ -16,6 +16,14 @@ public class ListProjectsQueryHandler {
         && query.createdFrom().isAfter(query.createdTo())) {
       throw new IllegalArgumentException("createdFrom must be before or equal to createdTo");
     }
-    return projects.findPageByOwnerId(ownerId, query);
+    var page = projects.findPageByOwnerId(ownerId, query);
+    return new ProjectPage(
+        page.items(),
+        page.page(),
+        page.size(),
+        page.totalItems(),
+        page.totalPages(),
+        page.hasNext(),
+        page.hasPrevious());
   }
 }

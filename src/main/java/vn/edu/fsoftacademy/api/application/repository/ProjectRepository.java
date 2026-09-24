@@ -3,13 +3,14 @@ package vn.edu.fsoftacademy.api.application.repository;
 import java.util.Optional;
 import java.util.UUID;
 import vn.edu.fsoftacademy.api.application.query.listprojects.ListProjectsQuery;
-import vn.edu.fsoftacademy.api.application.query.listprojects.ProjectPage;
+import vn.edu.fsoftacademy.api.application.query.listprojects.ListProjectsResult;
+import vn.edu.fsoftacademy.api.shared.pagination.PageResult;
 import vn.edu.fsoftacademy.api.domain.entity.Project;
 
 public interface ProjectRepository {
   Project save(Project project);
 
-  ProjectPage findPageByOwnerId(UUID ownerId, ListProjectsQuery query);
+  PageResult<ListProjectsResult> findPageByOwnerId(UUID ownerId, ListProjectsQuery query);
 
   Optional<Project> findByIdAndOwnerId(UUID id, UUID ownerId);
 

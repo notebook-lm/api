@@ -10,7 +10,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 import vn.edu.fsoftacademy.api.application.query.listprojects.ListProjectsQuery;
 import vn.edu.fsoftacademy.api.application.query.listprojects.ListProjectsResult;
-import vn.edu.fsoftacademy.api.application.query.listprojects.ProjectPage;
+import vn.edu.fsoftacademy.api.shared.pagination.PageResult;
 import vn.edu.fsoftacademy.api.application.repository.ProjectRepository;
 import vn.edu.fsoftacademy.api.domain.entity.Project;
 import vn.edu.fsoftacademy.api.infrastructure.persistence.jpa.entity.ProjectJpaEntity;
@@ -29,7 +29,7 @@ public class JpaProjectAdapter implements ProjectRepository {
     return project;
   }
 
-  public ProjectPage findPageByOwnerId(UUID ownerId, ListProjectsQuery query) {
+  public PageResult<ListProjectsResult> findPageByOwnerId(UUID ownerId, ListProjectsQuery query) {
     String property =
         switch (query.sortBy()) {
           case CREATED_AT -> "createdAt";
@@ -47,7 +47,7 @@ public class JpaProjectAdapter implements ProjectRepository {
             query.size(),
             Sort.by(direction, property).and(Sort.by(Sort.Direction.ASC, "id")));
     var result = projects.findAll(specification(ownerId, query), pageable);
-    return new ProjectPage(
+    return new PageResult<>(
         result.getContent().stream().map(this::toResult).toList(),
         result.getNumber(),
         result.getSize(),

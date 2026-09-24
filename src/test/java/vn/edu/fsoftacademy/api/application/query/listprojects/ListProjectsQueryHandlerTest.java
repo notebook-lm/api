@@ -23,7 +23,7 @@ class ListProjectsQueryHandlerTest {
             SortDirection.ASC,
             1,
             10);
-    var expected = new ProjectPage(List.of(), 1, 10, 0, 0, false, true);
+    var expected = new vn.edu.fsoftacademy.api.shared.pagination.PageResult<ListProjectsResult>(List.of(), 1, 10, 0, 0, false, true);
     when(projects.findPageByOwnerId(ownerId, query)).thenReturn(expected);
 
     new ListProjectsQueryHandler(projects).handle(ownerId, query);
