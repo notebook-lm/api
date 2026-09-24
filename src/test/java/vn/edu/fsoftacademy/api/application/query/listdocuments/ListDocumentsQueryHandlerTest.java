@@ -26,7 +26,7 @@ class ListDocumentsQueryHandlerTest {
 
     var result = new ListDocumentsQueryHandler(projects, documents).handle(owner, project, query);
 
-    assertEquals(List.of("Source"), result.items().stream().map(ListDocumentsResult.Item::title).toList());
+    assertEquals(List.of("Source"), result.items().stream().map(ProjectDocument::getTitle).toList());
     verify(documents).findPageByProjectId(project, query);
   }
 

@@ -26,7 +26,6 @@ import vn.edu.fsoftacademy.api.application.query.listdocuments.DocumentSortDirec
 import vn.edu.fsoftacademy.api.application.query.listdocuments.DocumentSortField;
 import vn.edu.fsoftacademy.api.application.query.listdocuments.ListDocumentsQuery;
 import vn.edu.fsoftacademy.api.application.query.listdocuments.ListDocumentsQueryHandler;
-import vn.edu.fsoftacademy.api.application.query.listdocuments.ListDocumentsResult.Item;
 import vn.edu.fsoftacademy.api.domain.entity.ProjectDocument;
 
 @RestController
@@ -184,11 +183,6 @@ public class ProjectDocumentController {
       case "desc" -> DocumentSortDirection.DESC;
       default -> throw new IllegalArgumentException("direction must be asc or desc");
     };
-  }
-
-  private ProjectDocumentResponse response(Item d) {
-    return new ProjectDocumentResponse(
-        d.id(), d.projectId(), d.title(), d.originalFilename(), d.contentType(), d.sizeBytes(), d.createdAt(), d.updatedAt());
   }
 
   private ProjectDocumentResponse response(ProjectDocument d) {

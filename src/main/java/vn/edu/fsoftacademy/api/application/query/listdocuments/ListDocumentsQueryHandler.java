@@ -24,19 +24,7 @@ public class ListDocumentsQueryHandler {
     projects.findByIdAndOwnerId(projectId, ownerId).orElseThrow(ProjectNotFoundException::new);
     var page = documents.findPageByProjectId(projectId, query);
     return new ListDocumentsResult(
-        page.items().stream()
-            .map(
-                document ->
-                    new ListDocumentsResult.Item(
-                        document.getId(),
-                        document.getProjectId(),
-                        document.getTitle(),
-                        document.getOriginalFilename(),
-                        document.getContentType(),
-                        document.getSizeBytes(),
-                        document.getCreatedAt(),
-                        document.getUpdatedAt()))
-            .toList(),
+        page.items(),
         page.page(),
         page.size(),
         page.totalItems(),

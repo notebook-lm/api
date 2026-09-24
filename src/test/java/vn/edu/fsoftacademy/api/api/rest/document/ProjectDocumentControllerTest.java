@@ -85,7 +85,7 @@ class ProjectDocumentControllerTest {
     when(list.handle(eq(ownerId), eq(projectId), any()))
         .thenReturn(
             new ListDocumentsResult(
-                List.of(new ListDocumentsResult.Item(documentId, projectId, "Source", "source.pdf", "application/pdf", 5, Instant.now(), Instant.now())),
+                List.of(d),
                 0, 20, 1, 1, false, false));
     when(update.execute(eq(ownerId), eq(projectId), eq(documentId), any())).thenReturn(d);
     assertEquals(1, controller.list(ownerId, projectId, null, null, null, "createdAt", "desc", 0, 20).items().size());
