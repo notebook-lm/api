@@ -84,7 +84,7 @@ class ProjectControllerTest {
     when(list.handle(eq(ownerId), any()))
         .thenReturn(
             new ListProjectsResult(
-                List.of(new ListProjectsResult.Item(projectId, "Notes", null, now, now)),
+                List.of(new vn.edu.fsoftacademy.api.domain.entity.Project(projectId, ownerId, "Notes", null, now, now)),
                 1,
                 10,
                 11,

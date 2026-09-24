@@ -18,16 +18,7 @@ public class ListProjectsQueryHandler {
     }
     var page = projects.findPageByOwnerId(ownerId, query);
     return new ListProjectsResult(
-        page.items().stream()
-            .map(
-                project ->
-                    new ListProjectsResult.Item(
-                        project.getId(),
-                        project.getTitle(),
-                        project.getDescription(),
-                        project.getCreatedAt(),
-                        project.getUpdatedAt()))
-            .toList(),
+        page.items(),
         page.page(),
         page.size(),
         page.totalItems(),

@@ -36,7 +36,7 @@ class ListProjectsQueryHandlerTest {
     var result = new ListProjectsQueryHandler(projects).handle(ownerId, query);
 
     assertEquals(
-        List.of("Notes"), result.items().stream().map(ListProjectsResult.Item::title).toList());
+        List.of("Notes"), result.items().stream().map(Project::getTitle).toList());
     verify(projects).findPageByOwnerId(ownerId, query);
   }
 
