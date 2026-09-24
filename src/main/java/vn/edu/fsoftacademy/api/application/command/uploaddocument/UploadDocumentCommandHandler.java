@@ -25,19 +25,26 @@ public class UploadDocumentCommandHandler {
     var key = "projects/" + projectId + "/documents/" + id;
     storage.put(key, command.content(), command.sizeBytes(), command.contentType());
     try {
-      var document =
-          documents.save(
-              new ProjectDocument(
-                  id,
-                  projectId,
-                  command.title(),
-                  command.originalFilename(),
-                  command.contentType(),
-                  command.sizeBytes(),
-                  key,
-                  java.time.Instant.now(),
-                  java.time.Instant.now()));
-      return result(document);
+      var document = documents.save(
+          new ProjectDocument(
+              id,
+              projectId,
+              command.title(),
+              command.originalFilename(),
+              command.contentType(),
+              command.sizeBytes(),
+              key,
+              java.time.Instant.now(),
+              java.time.Instant.now()));
+      return new UploadDocumentResult(
+          document.getId(),
+          document.getProjectId(),
+          document.getTitle(),
+          document.getOriginalFilename(),
+          document.getContentType(),
+          document.getSizeBytes(),
+          document.getCreatedAt(),
+          document.getUpdatedAt());
     } catch (RuntimeException ex) {
       try {
         storage.delete(key);
@@ -45,17 +52,5 @@ public class UploadDocumentCommandHandler {
       }
       throw ex;
     }
-  }
-
-  private UploadDocumentResult result(ProjectDocument d) {
-    return new UploadDocumentResult(
-        d.getId(),
-        d.getProjectId(),
-        d.getTitle(),
-        d.getOriginalFilename(),
-        d.getContentType(),
-        d.getSizeBytes(),
-        d.getCreatedAt(),
-        d.getUpdatedAt());
   }
 }
