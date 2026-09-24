@@ -9,7 +9,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 import vn.edu.fsoftacademy.api.application.query.listprojects.ListProjectsQuery;
-import vn.edu.fsoftacademy.api.application.query.listprojects.ListProjectsResult;
 import vn.edu.fsoftacademy.api.shared.pagination.PageResult;
 import vn.edu.fsoftacademy.api.application.repository.ProjectRepository;
 import vn.edu.fsoftacademy.api.domain.entity.Project;
@@ -29,26 +28,23 @@ public class JpaProjectAdapter implements ProjectRepository {
     return project;
   }
 
-  public PageResult<ListProjectsResult> findPageByOwnerId(UUID ownerId, ListProjectsQuery query) {
-    String property =
-        switch (query.sortBy()) {
-          case CREATED_AT -> "createdAt";
-          case UPDATED_AT -> "updatedAt";
-          case TITLE -> "title";
-        };
-    Sort.Direction direction =
-        query.direction()
-                == vn.edu.fsoftacademy.api.application.query.listprojects.SortDirection.ASC
+  public PageResult<Project> findPageByOwnerId(UUID ownerId, ListProjectsQuery query) {
+    String property = switch (query.sortBy()) {
+      case CREATED_AT -> "createdAt";
+      case UPDATED_AT -> "updatedAt";
+      case TITLE -> "title";
+    };
+    Sort.Direction direction = query
+        .direction() == vn.edu.fsoftacademy.api.application.query.listprojects.SortDirection.ASC
             ? Sort.Direction.ASC
             : Sort.Direction.DESC;
-    var pageable =
-        PageRequest.of(
-            query.page(),
-            query.size(),
-            Sort.by(direction, property).and(Sort.by(Sort.Direction.ASC, "id")));
+    var pageable = PageRequest.of(
+        query.page(),
+        query.size(),
+        Sort.by(direction, property).and(Sort.by(Sort.Direction.ASC, "id")));
     var result = projects.findAll(specification(ownerId, query), pageable);
     return new PageResult<>(
-        result.getContent().stream().map(this::toResult).toList(),
+        result.getContent().stream().map(this::toDomain).toList(),
         result.getNumber(),
         result.getSize(),
         result.getTotalElements(),
@@ -83,15 +79,6 @@ public class JpaProjectAdapter implements ProjectRepository {
         predicates.add(builder.lessThanOrEqualTo(root.get("createdAt"), query.createdTo()));
       return builder.and(predicates.toArray(Predicate[]::new));
     };
-  }
-
-  private ListProjectsResult toResult(ProjectJpaEntity entity) {
-    return new ListProjectsResult(
-        entity.getId(),
-        entity.getTitle(),
-        entity.getDescription(),
-        entity.getCreatedAt(),
-        entity.getUpdatedAt());
   }
 
   private Project toDomain(ProjectJpaEntity entity) {

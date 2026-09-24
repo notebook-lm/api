@@ -1,5 +1,6 @@
 package vn.edu.fsoftacademy.api.application.query.listprojects;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import vn.edu.fsoftacademy.api.application.repository.ProjectRepository;
+import vn.edu.fsoftacademy.api.domain.entity.Project;
 
 class ListProjectsQueryHandlerTest {
   @Test
@@ -23,11 +25,17 @@ class ListProjectsQueryHandlerTest {
             SortDirection.ASC,
             1,
             10);
-    var expected = new vn.edu.fsoftacademy.api.shared.pagination.PageResult<ListProjectsResult>(List.of(), 1, 10, 0, 0, false, true);
+    var project =
+        new Project(
+            UUID.randomUUID(), ownerId, "Notes", "Description", Instant.now(), Instant.now());
+    var expected =
+        new vn.edu.fsoftacademy.api.shared.pagination.PageResult<Project>(
+            List.of(project), 1, 10, 1, 1, false, true);
     when(projects.findPageByOwnerId(ownerId, query)).thenReturn(expected);
 
-    new ListProjectsQueryHandler(projects).handle(ownerId, query);
+    var result = new ListProjectsQueryHandler(projects).handle(ownerId, query);
 
+    assertEquals(List.of("Notes"), result.items().stream().map(ListProjectsResult::title).toList());
     verify(projects).findPageByOwnerId(ownerId, query);
   }
 

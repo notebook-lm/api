@@ -34,7 +34,7 @@ class JpaProjectAdapterTest {
   }
 
   @Test
-  void appliesOwnerScopedPagedQueryAndMapsResult() {
+  void appliesOwnerScopedPagedQueryAndMapsDomainProject() {
     UUID ownerId = UUID.randomUUID();
     var first = entity(UUID.randomUUID(), ownerId, "Newest");
     var query =
@@ -45,8 +45,8 @@ class JpaProjectAdapterTest {
 
     var result = adapter.findPageByOwnerId(ownerId, query);
 
-    assertEquals(
-        List.of("Newest"), result.items().stream().map(project -> project.title()).toList());
+    assertEquals(List.of("Newest"), result.items().stream().map(Project::getTitle).toList());
+    assertEquals(List.of(ownerId), result.items().stream().map(Project::getOwnerId).toList());
     assertEquals(1, result.totalItems());
     verify(repository).findAll(any(Specification.class), any(Pageable.class));
   }
