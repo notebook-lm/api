@@ -6,5 +6,6 @@ import jakarta.validation.constraints.NotBlank;
 
 @Schema(description = "New email address confirmed with the current password.")
 public record ChangeEmailRequest(
-    @Schema(example = "new.email@example.com") @NotBlank @Email String email,
-    @Schema(example = "secret123", format = "password") @NotBlank String currentPassword) {}
+    @Schema(example = "new.email@example.com") @NotBlank(message = "Email is required.")
+        @Email(message = "Enter a valid email address.") String email,
+    @Schema(example = "secret123", format = "password") @NotBlank(message = "Current password is required.") String currentPassword) {}

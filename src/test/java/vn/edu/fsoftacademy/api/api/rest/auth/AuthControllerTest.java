@@ -110,7 +110,7 @@ class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\":\"bad\",\"password\":\"\"}"))
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.message").value("Validation failed"));
+        .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"));
 
     verifyNoInteractions(login);
   }

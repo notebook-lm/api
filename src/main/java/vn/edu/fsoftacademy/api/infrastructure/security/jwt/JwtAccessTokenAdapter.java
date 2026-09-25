@@ -1,6 +1,7 @@
 package vn.edu.fsoftacademy.api.infrastructure.security.jwt;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.time.Instant;
@@ -43,11 +44,17 @@ public class JwtAccessTokenAdapter implements AccessTokenPort {
 
   @Override
   public boolean isValid(String token) {
+    return validationResult(token) == TokenValidationResult.VALID;
+  }
+
+  public TokenValidationResult validationResult(String token) {
     try {
       parse(token);
-      return true;
+      return TokenValidationResult.VALID;
+    } catch (ExpiredJwtException exception) {
+      return TokenValidationResult.EXPIRED;
     } catch (RuntimeException exception) {
-      return false;
+      return TokenValidationResult.INVALID;
     }
   }
 
@@ -63,6 +70,12 @@ public class JwtAccessTokenAdapter implements AccessTokenPort {
     claimValues(claims, ROLES_CLAIM).forEach(role -> authorities.add("ROLE_" + role));
     authorities.addAll(claimValues(claims, PERMISSIONS_CLAIM));
     return authorities;
+  }
+
+  public enum TokenValidationResult {
+    VALID,
+    EXPIRED,
+    INVALID
   }
 
   private Collection<String> claimValues(Claims claims, String claim) {

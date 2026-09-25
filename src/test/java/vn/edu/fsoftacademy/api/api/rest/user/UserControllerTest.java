@@ -108,7 +108,7 @@ class UserControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\":\"bad\",\"currentPassword\":\"\"}"))
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.message").value("Validation failed"));
+        .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"));
 
     verifyNoInteractions(email);
   }
@@ -121,7 +121,7 @@ class UserControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"displayName\":\"\"}"))
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.message").value("Validation failed"));
+        .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"));
 
     verifyNoInteractions(update);
   }
