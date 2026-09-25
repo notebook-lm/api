@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -17,6 +18,12 @@ import vn.edu.fsoftacademy.api.infrastructure.security.config.ApiAuthenticationE
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+  private static final String AUTH_BASE_PATH = "/api/v1/auth";
+  private static final String REGISTER_PATH = AUTH_BASE_PATH + "/register";
+  private static final String LOGIN_PATH = AUTH_BASE_PATH + "/login";
+  private static final String REFRESH_PATH = AUTH_BASE_PATH + "/refresh";
+  private static final String LOGOUT_PATH = AUTH_BASE_PATH + "/logout";
+
   private final JwtAccessTokenAdapter accessTokens;
   private final ApiAuthenticationEntryPoint authenticationEntryPoint;
 
@@ -24,6 +31,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       JwtAccessTokenAdapter accessTokens, ApiAuthenticationEntryPoint authenticationEntryPoint) {
     this.accessTokens = accessTokens;
     this.authenticationEntryPoint = authenticationEntryPoint;
+  }
+
+  @Override
+  protected boolean shouldNotFilter(HttpServletRequest request) {
+    if (!HttpMethod.POST.matches(request.getMethod())) return false;
+
+    return switch (request.getRequestURI()) {
+      case REGISTER_PATH, LOGIN_PATH, REFRESH_PATH, LOGOUT_PATH -> true;
+      default -> false;
+    };
   }
 
   @Override

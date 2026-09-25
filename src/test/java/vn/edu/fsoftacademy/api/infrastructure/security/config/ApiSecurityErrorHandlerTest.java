@@ -1,6 +1,8 @@
 package vn.edu.fsoftacademy.api.infrastructure.security.config;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,8 +24,12 @@ class ApiSecurityErrorHandlerTest {
     authenticationEntryPoint.commence(
         new MockHttpServletRequest(), response, mock(AuthenticationException.class));
 
-    assertEquals(401, response.getStatus());
-    assertEquals("Authentication is required", objectMapper.readTree(response.getContentAsByteArray()).get("message").asText());
+    assertSecurityError(
+        response,
+        401,
+        "Unauthorized",
+        "AUTHENTICATION_REQUIRED",
+        "Authentication is required");
   }
 
   @Test
@@ -33,7 +39,31 @@ class ApiSecurityErrorHandlerTest {
     new ApiAccessDeniedHandler(authenticationEntryPoint)
         .handle(new MockHttpServletRequest(), response, new AccessDeniedException("Denied"));
 
-    assertEquals(403, response.getStatus());
-    assertEquals("You do not have permission to access this resource", objectMapper.readTree(response.getContentAsByteArray()).get("message").asText());
+    assertSecurityError(
+        response,
+        403,
+        "Forbidden",
+        "ACCESS_DENIED",
+        "You do not have permission to access this resource");
+  }
+
+  private void assertSecurityError(
+      MockHttpServletResponse response,
+      int status,
+      String error,
+      String code,
+      String message)
+      throws Exception {
+    assertEquals(status, response.getStatus());
+    assertTrue(response.getContentType().startsWith("application/json"));
+    var payload = objectMapper.readTree(response.getContentAsByteArray());
+    assertTrue(payload.hasNonNull("timestamp"));
+    assertTrue(payload.get("timestamp").isTextual());
+    assertEquals(status, payload.get("status").asInt());
+    assertEquals(error, payload.get("error").asText());
+    assertEquals(code, payload.get("code").asText());
+    assertEquals(message, payload.get("message").asText());
+    assertTrue(payload.get("fieldErrors").isObject());
+    assertTrue(payload.get("fieldErrors").isEmpty());
   }
 }

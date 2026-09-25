@@ -1,6 +1,7 @@
 package vn.edu.fsoftacademy.api.infrastructure.security.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -17,7 +18,10 @@ public class ApiAuthenticationEntryPoint implements AuthenticationEntryPoint {
   private final ObjectMapper objectMapper;
 
   public ApiAuthenticationEntryPoint() {
-    this.objectMapper = new ObjectMapper().findAndRegisterModules();
+    this.objectMapper =
+        new ObjectMapper()
+            .findAndRegisterModules()
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
   }
 
   @Override
