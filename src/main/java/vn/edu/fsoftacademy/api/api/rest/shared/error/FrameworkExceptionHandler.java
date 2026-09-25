@@ -34,48 +34,48 @@ public class FrameworkExceptionHandler extends GlobalExceptionHandler {
                     violation -> violation.getPropertyPath().toString(),
                     violation -> violation.getMessage(),
                     (first, ignored) -> first));
-    return error(HttpStatus.BAD_REQUEST, "Validation failed", fieldErrors);
+    return error(HttpStatus.BAD_REQUEST, ApiErrorCode.VALIDATION_FAILED, "Validation failed", fieldErrors);
   }
 
   @ExceptionHandler(HttpMessageNotReadableException.class)
   ResponseEntity<ApiError> unreadableMessage(HttpMessageNotReadableException ex) {
-    return error(HttpStatus.BAD_REQUEST, "Request body is missing or malformed", Map.of());
+    return error(HttpStatus.BAD_REQUEST, ApiErrorCode.MALFORMED_REQUEST, "Request body is missing or malformed", Map.of());
   }
 
   @ExceptionHandler({MissingServletRequestParameterException.class, MissingRequestHeaderException.class})
   ResponseEntity<ApiError> missingRequestValue(Exception ex) {
-    return error(HttpStatus.BAD_REQUEST, ex.getMessage(), Map.of());
+    return error(HttpStatus.BAD_REQUEST, ApiErrorCode.MISSING_REQUEST_VALUE, ex.getMessage(), Map.of());
   }
 
   @ExceptionHandler(MethodArgumentTypeMismatchException.class)
   ResponseEntity<ApiError> typeMismatch(MethodArgumentTypeMismatchException ex) {
     String name = ex.getName();
-    return error(HttpStatus.BAD_REQUEST, "Invalid value for '" + name + "'", Map.of(name, "Invalid value"));
+    return error(HttpStatus.BAD_REQUEST, ApiErrorCode.INVALID_PARAMETER, "Invalid value for '" + name + "'", Map.of(name, "Invalid value"));
   }
 
   @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
   ResponseEntity<ApiError> methodNotSupported(HttpRequestMethodNotSupportedException ex) {
-    return error(HttpStatus.METHOD_NOT_ALLOWED, ex.getMessage(), Map.of());
+    return error(HttpStatus.METHOD_NOT_ALLOWED, ApiErrorCode.METHOD_NOT_ALLOWED, ex.getMessage(), Map.of());
   }
 
   @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
   ResponseEntity<ApiError> mediaTypeNotSupported(HttpMediaTypeNotSupportedException ex) {
-    return error(HttpStatus.UNSUPPORTED_MEDIA_TYPE, ex.getMessage(), Map.of());
+    return error(HttpStatus.UNSUPPORTED_MEDIA_TYPE, ApiErrorCode.UNSUPPORTED_MEDIA_TYPE, ex.getMessage(), Map.of());
   }
 
   @ExceptionHandler(NoResourceFoundException.class)
   ResponseEntity<ApiError> resourceNotFound(NoResourceFoundException ex) {
-    return error(HttpStatus.NOT_FOUND, "Endpoint not found", Map.of());
+    return error(HttpStatus.NOT_FOUND, ApiErrorCode.ENDPOINT_NOT_FOUND, "Endpoint not found", Map.of());
   }
 
   @ExceptionHandler(AccessDeniedException.class)
   ResponseEntity<ApiError> accessDenied(AccessDeniedException ex) {
-    return error(HttpStatus.FORBIDDEN, "You do not have permission to access this resource", Map.of());
+    return error(HttpStatus.FORBIDDEN, ApiErrorCode.ACCESS_DENIED, "You do not have permission to access this resource", Map.of());
   }
 
   @ExceptionHandler(Exception.class)
   ResponseEntity<ApiError> unexpected(Exception ex) {
     log.error("Unhandled API exception", ex);
-    return error(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred", Map.of());
+    return error(HttpStatus.INTERNAL_SERVER_ERROR, ApiErrorCode.INTERNAL_SERVER_ERROR, "An unexpected error occurred", Map.of());
   }
 }

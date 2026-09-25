@@ -18,11 +18,16 @@ public class AuthenticationExceptionHandler extends GlobalExceptionHandler {
   /** Authenticated principal's account no longer exists — treat as unauthorized. */
   @ExceptionHandler(UserNotFoundException.class)
   ResponseEntity<ApiError> userNotFound(UserNotFoundException ex) {
-    return error(HttpStatus.UNAUTHORIZED, ex.getMessage(), Map.of());
+    return error(HttpStatus.UNAUTHORIZED, ApiErrorCode.AUTHENTICATION_REQUIRED, ex.getMessage(), Map.of());
   }
 
-  @ExceptionHandler({InvalidCredentialsException.class, InvalidRefreshTokenException.class})
-  ResponseEntity<ApiError> unauthorized(RuntimeException ex) {
-    return error(HttpStatus.UNAUTHORIZED, ex.getMessage(), Map.of());
+  @ExceptionHandler(InvalidCredentialsException.class)
+  ResponseEntity<ApiError> invalidCredentials(InvalidCredentialsException ex) {
+    return error(HttpStatus.UNAUTHORIZED, ApiErrorCode.INVALID_CREDENTIALS, ex.getMessage(), Map.of());
+  }
+
+  @ExceptionHandler(InvalidRefreshTokenException.class)
+  ResponseEntity<ApiError> invalidRefreshToken(InvalidRefreshTokenException ex) {
+    return error(HttpStatus.UNAUTHORIZED, ApiErrorCode.INVALID_REFRESH_TOKEN, ex.getMessage(), Map.of());
   }
 }

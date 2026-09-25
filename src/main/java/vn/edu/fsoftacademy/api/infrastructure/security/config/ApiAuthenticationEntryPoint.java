@@ -11,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import vn.edu.fsoftacademy.api.api.rest.shared.error.ApiError;
+import vn.edu.fsoftacademy.api.api.rest.shared.error.ApiErrorCode;
 
 public class ApiAuthenticationEntryPoint implements AuthenticationEntryPoint {
   private final ObjectMapper objectMapper;
@@ -25,14 +26,14 @@ public class ApiAuthenticationEntryPoint implements AuthenticationEntryPoint {
       HttpServletResponse response,
       AuthenticationException authenticationException)
       throws IOException {
-    write(response, HttpStatus.UNAUTHORIZED, "Authentication is required");
+    write(response, HttpStatus.UNAUTHORIZED, ApiErrorCode.AUTHENTICATION_REQUIRED, "Authentication is required");
   }
 
-  void write(HttpServletResponse response, HttpStatus status, String message) throws IOException {
+  public void write(HttpServletResponse response, HttpStatus status, ApiErrorCode code, String message) throws IOException {
     response.setStatus(status.value());
     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
     objectMapper.writeValue(
         response.getOutputStream(),
-        new ApiError(Instant.now(), status.value(), status.getReasonPhrase(), message, Map.of()));
+        new ApiError(Instant.now(), status.value(), status.getReasonPhrase(), code, message, Map.of()));
   }
 }

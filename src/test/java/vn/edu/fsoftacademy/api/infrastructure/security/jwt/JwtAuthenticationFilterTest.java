@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
+import vn.edu.fsoftacademy.api.api.rest.shared.error.ApiErrorCode;
+import vn.edu.fsoftacademy.api.infrastructure.security.config.ApiAuthenticationEntryPoint;
 
 class JwtAuthenticationFilterTest {
   @AfterEach
@@ -20,7 +22,8 @@ class JwtAuthenticationFilterTest {
   void authenticatesValidBearerTokenAndContinuesChain() throws Exception {
     JwtAccessTokenAdapter accessTokens = mock(JwtAccessTokenAdapter.class);
     UUID userId = UUID.randomUUID();
-    when(accessTokens.isValid("token")).thenReturn(true);
+    when(accessTokens.validationResult("token"))
+        .thenReturn(JwtAccessTokenAdapter.TokenValidationResult.VALID);
     when(accessTokens.extractUserId("token")).thenReturn(userId);
     when(accessTokens.extractAuthorities("token"))
         .thenReturn(java.util.List.of("ROLE_USER", "note:read"));
@@ -28,7 +31,7 @@ class JwtAuthenticationFilterTest {
     request.addHeader("Authorization", "Bearer token");
     var chain = mock(jakarta.servlet.FilterChain.class);
 
-    new JwtAuthenticationFilter(accessTokens)
+    new JwtAuthenticationFilter(accessTokens, new ApiAuthenticationEntryPoint())
         .doFilter(request, new MockHttpServletResponse(), chain);
 
     assertEquals(userId, SecurityContextHolder.getContext().getAuthentication().getPrincipal());
@@ -39,17 +42,39 @@ class JwtAuthenticationFilterTest {
   }
 
   @Test
-  void ignoresMissingOrInvalidBearerTokenAndContinuesChain() throws Exception {
+  void rejectsInvalidBearerTokenWithoutContinuingChain() throws Exception {
     JwtAccessTokenAdapter accessTokens = mock(JwtAccessTokenAdapter.class);
-    when(accessTokens.isValid("bad")).thenReturn(false);
+    when(accessTokens.validationResult("bad"))
+        .thenReturn(JwtAccessTokenAdapter.TokenValidationResult.INVALID);
     var request = new MockHttpServletRequest();
     request.addHeader("Authorization", "Bearer bad");
     var chain = mock(jakarta.servlet.FilterChain.class);
 
-    new JwtAuthenticationFilter(accessTokens)
-        .doFilter(request, new MockHttpServletResponse(), chain);
+    var response = new MockHttpServletResponse();
+    new JwtAuthenticationFilter(accessTokens, new ApiAuthenticationEntryPoint())
+        .doFilter(request, response, chain);
 
     assertNull(SecurityContextHolder.getContext().getAuthentication());
-    verify(chain).doFilter(any(), any());
+    assertEquals(401, response.getStatus());
+    assertTrue(response.getContentAsString().contains(ApiErrorCode.ACCESS_TOKEN_INVALID.name()));
+    verifyNoInteractions(chain);
+  }
+
+  @Test
+  void rejectsExpiredBearerTokenWithExpiryCode() throws Exception {
+    JwtAccessTokenAdapter accessTokens = mock(JwtAccessTokenAdapter.class);
+    when(accessTokens.validationResult("expired"))
+        .thenReturn(JwtAccessTokenAdapter.TokenValidationResult.EXPIRED);
+    var request = new MockHttpServletRequest();
+    request.addHeader("Authorization", "Bearer expired");
+    var response = new MockHttpServletResponse();
+    var chain = mock(jakarta.servlet.FilterChain.class);
+
+    new JwtAuthenticationFilter(accessTokens, new ApiAuthenticationEntryPoint())
+        .doFilter(request, response, chain);
+
+    assertEquals(401, response.getStatus());
+    assertTrue(response.getContentAsString().contains(ApiErrorCode.ACCESS_TOKEN_EXPIRED.name()));
+    verifyNoInteractions(chain);
   }
 }

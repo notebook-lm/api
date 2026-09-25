@@ -9,7 +9,8 @@ public record ApiError(
     @Schema(format = "date-time") Instant timestamp,
     @Schema(example = "400") int status,
     @Schema(example = "Bad Request") String error,
-    @Schema(example = "Validation failed") String message,
+    @Schema(example = "VALIDATION_FAILED") ApiErrorCode code,
+    @Schema(example = "must not be blank") String message,
     @Schema(
             description = "Validation messages keyed by request field",
             example = "{\"email\":\"must be a well-formed email address\"}")

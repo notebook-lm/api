@@ -26,6 +26,6 @@ public class ValidationExceptionHandler extends GlobalExceptionHandler {
                 e -> e.getField(),
                 e -> e.getDefaultMessage() == null ? "Invalid value" : e.getDefaultMessage(),
                 (a, b) -> a));
-    return error(HttpStatus.BAD_REQUEST, message, fields);
+    return error(HttpStatus.BAD_REQUEST, ApiErrorCode.VALIDATION_FAILED, message, fields);
   }
 }

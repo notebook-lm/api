@@ -13,13 +13,19 @@ class AuthenticationExceptionHandlerTest {
   @Test
   void mapsInvalidCredentialsToUnauthorized() {
     assertEquals(
-        401, handler.unauthorized(new InvalidCredentialsException()).getStatusCode().value());
+        401, handler.invalidCredentials(new InvalidCredentialsException()).getStatusCode().value());
+    assertEquals(
+        ApiErrorCode.INVALID_CREDENTIALS,
+        handler.invalidCredentials(new InvalidCredentialsException()).getBody().code());
   }
 
   @Test
   void mapsInvalidRefreshTokenToUnauthorized() {
     assertEquals(
-        401, handler.unauthorized(new InvalidRefreshTokenException()).getStatusCode().value());
+        401, handler.invalidRefreshToken(new InvalidRefreshTokenException()).getStatusCode().value());
+    assertEquals(
+        ApiErrorCode.INVALID_REFRESH_TOKEN,
+        handler.invalidRefreshToken(new InvalidRefreshTokenException()).getBody().code());
   }
 
   @Test
