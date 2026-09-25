@@ -5,6 +5,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
@@ -71,7 +72,9 @@ class HttpSecurityConfigurationTest {
 
   @Test
   void protectedEndpointRejectsMissingToken() throws Exception {
-    mvc.perform(get("/api/v1/users/me")).andExpect(status().isUnauthorized());
+    mvc.perform(get("/api/v1/users/me"))
+        .andExpect(status().isUnauthorized())
+        .andExpect(jsonPath("$.message").value("Authentication is required"));
   }
 
   @Test
@@ -90,7 +93,8 @@ class HttpSecurityConfigurationTest {
                     authentication(
                         new UsernamePasswordAuthenticationToken(
                             UUID.randomUUID(), null, List.of()))))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("You do not have permission to access this resource"));
   }
 
   @Test
@@ -123,7 +127,8 @@ class HttpSecurityConfigurationTest {
                     authentication(
                         new UsernamePasswordAuthenticationToken(
                             UUID.randomUUID(), null, List.of()))))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("You do not have permission to access this resource"));
   }
 
   @Test

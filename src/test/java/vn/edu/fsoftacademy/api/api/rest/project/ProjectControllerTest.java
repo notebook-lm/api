@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import vn.edu.fsoftacademy.api.api.rest.project.dto.request.CreateProjectRequest;
 import vn.edu.fsoftacademy.api.api.rest.project.dto.request.UpdateProjectRequest;
 import vn.edu.fsoftacademy.api.api.rest.shared.error.BusinessExceptionHandler;
+import vn.edu.fsoftacademy.api.api.rest.shared.error.FrameworkExceptionHandler;
 import vn.edu.fsoftacademy.api.api.rest.shared.error.ValidationExceptionHandler;
 import vn.edu.fsoftacademy.api.application.command.createproject.*;
 import vn.edu.fsoftacademy.api.application.command.deleteproject.DeleteProjectCommandHandler;
@@ -44,7 +45,10 @@ class ProjectControllerTest {
     controller = new ProjectController(create, list, get, update, delete);
     mvc =
         MockMvcBuilders.standaloneSetup(controller)
-            .setControllerAdvice(new BusinessExceptionHandler(), new ValidationExceptionHandler())
+            .setControllerAdvice(
+                new BusinessExceptionHandler(),
+                new ValidationExceptionHandler(),
+                new FrameworkExceptionHandler())
             .build();
   }
 
@@ -122,7 +126,8 @@ class ProjectControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"title\":\"\",\"description\":\"ok\"}"))
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.message").value("Validation failed"));
+        .andExpect(jsonPath("$.message").value("must not be blank"))
+        .andExpect(jsonPath("$.fieldErrors.title").isNotEmpty());
 
     mvc.perform(
             post("/api/v1/projects")
@@ -132,5 +137,16 @@ class ProjectControllerTest {
                     "{\"title\":\"Project\",\"description\":\"%s\"}".formatted("x".repeat(2001))))
         .andExpect(status().isBadRequest());
     verifyNoInteractions(create);
+  }
+
+  @Test
+  void createReturnsMessageForMalformedJson() throws Exception {
+    mvc.perform(
+            post("/api/v1/projects")
+                .principal(ownerId::toString)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{invalid"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.message").value("Request body is missing or malformed"));
   }
 }

@@ -12,7 +12,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -26,7 +25,11 @@ import vn.edu.fsoftacademy.api.infrastructure.security.jwt.JwtProperties;
 @EnableConfigurationProperties({CorsProperties.class, JwtProperties.class})
 public class HttpSecurityConfiguration {
   @Bean
-  SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter)
+  SecurityFilterChain securityFilterChain(
+      HttpSecurity http,
+      JwtAuthenticationFilter jwtFilter,
+      ApiAuthenticationEntryPoint authenticationEntryPoint,
+      ApiAccessDeniedHandler accessDeniedHandler)
       throws Exception {
     return http.csrf(csrf -> csrf.disable())
         .cors(cors -> {})
@@ -41,10 +44,22 @@ public class HttpSecurityConfiguration {
                     .authenticated())
         .exceptionHandling(
             exceptions ->
-                exceptions.authenticationEntryPoint(
-                    new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                exceptions
+                    .authenticationEntryPoint(authenticationEntryPoint)
+                    .accessDeniedHandler(accessDeniedHandler))
         .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
         .build();
+  }
+
+
+  @Bean
+  ApiAuthenticationEntryPoint apiAuthenticationEntryPoint() {
+    return new ApiAuthenticationEntryPoint();
+  }
+
+  @Bean
+  ApiAccessDeniedHandler apiAccessDeniedHandler(ApiAuthenticationEntryPoint authenticationEntryPoint) {
+    return new ApiAccessDeniedHandler(authenticationEntryPoint);
   }
 
   @Bean

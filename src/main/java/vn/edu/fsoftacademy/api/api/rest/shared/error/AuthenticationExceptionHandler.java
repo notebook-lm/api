@@ -1,6 +1,8 @@
 package vn.edu.fsoftacademy.api.api.rest.shared.error;
 
 import java.util.Map;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -10,6 +12,7 @@ import vn.edu.fsoftacademy.api.application.exception.InvalidRefreshTokenExceptio
 import vn.edu.fsoftacademy.api.application.exception.UserNotFoundException;
 
 @RestControllerAdvice
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class AuthenticationExceptionHandler extends GlobalExceptionHandler {
 
   /** Authenticated principal's account no longer exists — treat as unauthorized. */
