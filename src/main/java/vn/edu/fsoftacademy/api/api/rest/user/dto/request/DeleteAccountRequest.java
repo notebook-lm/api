@@ -6,4 +6,4 @@ import jakarta.validation.constraints.NotBlank;
 @Schema(
     description = "Password confirmation required to permanently delete the authenticated account.")
 public record DeleteAccountRequest(
-    @Schema(example = "secret123", format = "password") @NotBlank String currentPassword) {}
+    @Schema(example = "secret123", format = "password") @NotBlank(message = "Current password is required.") String currentPassword) {}

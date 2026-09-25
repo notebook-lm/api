@@ -126,7 +126,7 @@ class ProjectControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"title\":\"\",\"description\":\"ok\"}"))
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.message").value("must not be blank"))
+        .andExpect(jsonPath("$.message").value("Project title is required."))
         .andExpect(jsonPath("$.fieldErrors.title").isNotEmpty());
 
     mvc.perform(
