@@ -8,7 +8,9 @@ import java.io.ByteArrayInputStream;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import vn.edu.fsoftacademy.api.application.mapper.outbox.DocumentUploadedOutboxEventMapper;
 import vn.edu.fsoftacademy.api.application.port.ObjectStorage;
 import vn.edu.fsoftacademy.api.application.repository.*;
 import vn.edu.fsoftacademy.api.domain.entity.Project;
@@ -19,13 +21,16 @@ class UploadDocumentCommandHandlerTest {
     var projects = mock(ProjectRepository.class);
     var documents = mock(ProjectDocumentRepository.class);
     var storage = mock(ObjectStorage.class);
+    var outboxEvents = mock(OutboxEventRepository.class);
     var owner = UUID.randomUUID();
     var project = UUID.randomUUID();
     when(projects.findByIdAndOwnerId(project, owner))
         .thenReturn(
             Optional.of(new Project(project, owner, "P", null, Instant.now(), Instant.now())));
     when(documents.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-    var handler = new UploadDocumentCommandHandler(projects, documents, storage);
+    var handler = new UploadDocumentCommandHandler(
+        projects, documents, storage, outboxEvents,
+        new DocumentUploadedOutboxEventMapper(new ObjectMapper()));
     var result =
         handler.execute(
             owner,
@@ -50,5 +55,7 @@ class UploadDocumentCommandHandlerTest {
                     d.getId().equals(result.id())
                         && d.getProjectId().equals(project)
                         && d.getOriginalFilename().equals("source.pdf")));
+    verify(outboxEvents).save(argThat(event ->
+        event.getEventType().equals("document.uploaded") && event.getPayload().contains(result.id().toString())));
   }
 }

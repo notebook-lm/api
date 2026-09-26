@@ -1,8 +1,11 @@
 package vn.edu.fsoftacademy.api.infrastructure.config;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import vn.edu.fsoftacademy.api.application.command.changeemail.ChangeEmailCommandHandler;
 import vn.edu.fsoftacademy.api.application.command.changepassword.ChangePasswordCommandHandler;
 import vn.edu.fsoftacademy.api.application.command.createproject.CreateProjectCommandHandler;
@@ -17,7 +20,9 @@ import vn.edu.fsoftacademy.api.application.command.updatedocument.UpdateDocument
 import vn.edu.fsoftacademy.api.application.command.updateprofile.UpdateProfileCommandHandler;
 import vn.edu.fsoftacademy.api.application.command.updateproject.UpdateProjectCommandHandler;
 import vn.edu.fsoftacademy.api.application.command.uploaddocument.UploadDocumentCommandHandler;
+import vn.edu.fsoftacademy.api.application.mapper.outbox.DocumentUploadedOutboxEventMapper;
 import vn.edu.fsoftacademy.api.application.port.AccessTokenPort;
+import vn.edu.fsoftacademy.api.application.port.MessagePublisher;
 import vn.edu.fsoftacademy.api.application.port.ObjectStorage;
 import vn.edu.fsoftacademy.api.application.port.PasswordHasher;
 import vn.edu.fsoftacademy.api.application.port.RefreshTokenPort;
@@ -27,16 +32,21 @@ import vn.edu.fsoftacademy.api.application.query.getdocument.GetDocumentQueryHan
 import vn.edu.fsoftacademy.api.application.query.getproject.GetProjectQueryHandler;
 import vn.edu.fsoftacademy.api.application.query.listdocuments.ListDocumentsQueryHandler;
 import vn.edu.fsoftacademy.api.application.query.listprojects.ListProjectsQueryHandler;
+import vn.edu.fsoftacademy.api.application.repository.OutboxEventRepository;
 import vn.edu.fsoftacademy.api.application.repository.ProjectDocumentRepository;
 import vn.edu.fsoftacademy.api.application.repository.ProjectRepository;
 import vn.edu.fsoftacademy.api.application.repository.RefreshSessionRepository;
 import vn.edu.fsoftacademy.api.application.repository.RoleRepository;
 import vn.edu.fsoftacademy.api.application.repository.UserRepository;
 import vn.edu.fsoftacademy.api.application.service.SessionTokenService;
+import vn.edu.fsoftacademy.api.infrastructure.messaging.kafka.KafkaMessage;
+import vn.edu.fsoftacademy.api.worker.OutboxWorker;
+import vn.edu.fsoftacademy.api.worker.OutboxWorkerProperties;
 import vn.edu.fsoftacademy.api.infrastructure.storage.StorageProperties;
 
 @Configuration
-@EnableConfigurationProperties(StorageProperties.class)
+@EnableScheduling
+@EnableConfigurationProperties({StorageProperties.class, OutboxWorkerProperties.class})
 public class ApplicationWiringConfig {
   @Bean
   SessionTokenPort sessionTokenPort(
@@ -119,8 +129,11 @@ public class ApplicationWiringConfig {
 
   @Bean
   UploadDocumentCommandHandler uploadDocumentCommandHandler(
-      ProjectRepository projects, ProjectDocumentRepository documents, ObjectStorage storage) {
-    return new UploadDocumentCommandHandler(projects, documents, storage);
+      ProjectRepository projects, ProjectDocumentRepository documents, ObjectStorage storage,
+      OutboxEventRepository outboxEvents, ObjectMapper objectMapper) {
+    return new UploadDocumentCommandHandler(
+        projects, documents, storage, outboxEvents,
+        new DocumentUploadedOutboxEventMapper(objectMapper));
   }
 
   @Bean
@@ -145,6 +158,17 @@ public class ApplicationWiringConfig {
   DeleteDocumentCommandHandler deleteDocumentCommandHandler(
       ProjectRepository projects, ProjectDocumentRepository documents, ObjectStorage storage) {
     return new DeleteDocumentCommandHandler(projects, documents, storage);
+  }
+
+  @Bean
+  MessagePublisher messagePublisher(KafkaTemplate<String, String> kafkaTemplate, OutboxWorkerProperties properties) {
+    return new KafkaMessage(kafkaTemplate, properties);
+  }
+
+  @Bean
+  OutboxWorker outboxWorker(
+      OutboxEventRepository events, MessagePublisher publisher, OutboxWorkerProperties properties) {
+    return new OutboxWorker(events, publisher, properties);
   }
 
   @Bean
