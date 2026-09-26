@@ -26,6 +26,8 @@ public class OutboxEventJpaEntity {
   private Instant publishedAt;
   @Column(name = "last_error")
   private String lastError;
+  @Column(name = "claimed_until")
+  private Instant claimedUntil;
 
   protected OutboxEventJpaEntity() {
   }
@@ -76,12 +78,18 @@ public class OutboxEventJpaEntity {
 
   public void markPublished(Instant at) {
     publishedAt = at;
+    claimedUntil = null;
     lastError = null;
   }
 
   public void markFailed(Instant nextAttemptAt, String error) {
     attempts++;
     this.nextAttemptAt = nextAttemptAt;
+    claimedUntil = null;
     lastError = error;
+  }
+
+  public void claimUntil(Instant until) {
+    claimedUntil = until;
   }
 }

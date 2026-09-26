@@ -2,6 +2,7 @@ package vn.edu.fsoftacademy.api.infrastructure.persistence.jpa.adapter;
 
 import java.time.Instant;
 import java.util.List;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import vn.edu.fsoftacademy.api.application.repository.OutboxEventRepository;
@@ -23,10 +24,11 @@ public class JpaOutboxEventAdapter implements OutboxEventRepository {
     return event;
   }
 
-  @Transactional(readOnly = true)
-  public List<OutboxEvent> findPending(int limit, Instant now) {
-    return events.findPending(now)
-        .stream().limit(limit).map(this::domain).toList();
+  @Transactional
+  public List<OutboxEvent> claimPending(int limit, Instant now, Instant claimedUntil) {
+    var pending = events.findClaimable(now, PageRequest.of(0, limit));
+    pending.forEach(event -> event.claimUntil(claimedUntil));
+    return pending.stream().map(this::domain).toList();
   }
 
   @Transactional

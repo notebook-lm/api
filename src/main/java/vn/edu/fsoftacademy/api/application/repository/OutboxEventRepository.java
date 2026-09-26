@@ -7,7 +7,7 @@ import vn.edu.fsoftacademy.api.domain.entity.OutboxEvent;
 public interface OutboxEventRepository {
   OutboxEvent save(OutboxEvent event);
 
-  List<OutboxEvent> findPending(int limit, Instant now);
+  List<OutboxEvent> claimPending(int limit, Instant now, Instant claimedUntil);
 
   void markPublished(OutboxEvent event, Instant publishedAt);
 
