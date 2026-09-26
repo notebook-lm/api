@@ -10,5 +10,4 @@ public record OutboxWorkerProperties(
     int maxAttempts,
     long initialBackoffSeconds,
     long maxBackoffSeconds,
-    long claimLeaseSeconds,
-    String topic) {}
+    long claimLeaseSeconds) {}

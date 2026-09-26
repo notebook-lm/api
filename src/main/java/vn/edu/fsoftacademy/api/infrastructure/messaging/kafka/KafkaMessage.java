@@ -12,18 +12,16 @@ import vn.edu.fsoftacademy.api.domain.entity.OutboxEvent;
 public class KafkaMessage implements MessagePublisher {
   private static final Logger log = LoggerFactory.getLogger(KafkaMessage.class);
   private final KafkaTemplate<String, String> kafkaTemplate;
-  private final OutboxWorkerProperties properties;
 
-  public KafkaMessage(KafkaTemplate<String, String> kafkaTemplate, OutboxWorkerProperties properties) {
+  public KafkaMessage(KafkaTemplate<String, String> kafkaTemplate) {
     this.kafkaTemplate = kafkaTemplate;
-    this.properties = properties;
   }
 
   @Override
-  public void publish(OutboxEvent event) {
+  public void publish(String topic, OutboxEvent event) {
     try {
-      kafkaTemplate.send(properties.topic(), event.getId().toString(), event.getPayload()).get();
-      log.info("Published outbox event {} to Kafka topic {}", event.getId(), properties.topic());
+      kafkaTemplate.send(topic, event.getId().toString(), event.getPayload()).get();
+      log.info("Published outbox event {} to Kafka topic {}", event.getId(), topic);
     } catch (InterruptedException ex) {
       Thread.currentThread().interrupt();
       throw new IllegalStateException("Interrupted while publishing outbox event", ex);

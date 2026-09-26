@@ -12,17 +12,16 @@ import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.Test;
 import org.springframework.kafka.core.KafkaTemplate;
 import vn.edu.fsoftacademy.api.domain.entity.OutboxEvent;
-import vn.edu.fsoftacademy.api.worker.OutboxWorkerProperties;
 
 class KafkaMessageTest {
   @Test
   void sendsEventUsingIdAsKafkaKey() {
     @SuppressWarnings("unchecked")
     KafkaTemplate<String, String> template = mock(KafkaTemplate.class);
-    var event = new OutboxEvent(UUID.randomUUID(), "document.uploaded", "{\"id\":1}", 0, Instant.now(), Instant.now(), null, null);
+    var event = new OutboxEvent(UUID.randomUUID(), "document.uploaded", "document.uploaded", "{\"id\":1}", 0, Instant.now(), Instant.now(), null, null);
     when(template.send("document.uploaded", event.getId().toString(), event.getPayload())).thenReturn(CompletableFuture.completedFuture(null));
 
-    new KafkaMessage(template, properties()).publish(event);
+    new KafkaMessage(template).publish(event.getTopic(), event);
 
     verify(template).send("document.uploaded", event.getId().toString(), event.getPayload());
   }
@@ -31,14 +30,11 @@ class KafkaMessageTest {
   void wrapsDeliveryFailure() {
     @SuppressWarnings("unchecked")
     KafkaTemplate<String, String> template = mock(KafkaTemplate.class);
-    var event = new OutboxEvent(UUID.randomUUID(), "document.uploaded", "{}", 0, Instant.now(), Instant.now(), null, null);
+    var event = new OutboxEvent(UUID.randomUUID(), "document.uploaded", "document.uploaded", "{}", 0, Instant.now(), Instant.now(), null, null);
     when(template.send("document.uploaded", event.getId().toString(), event.getPayload())).thenReturn(CompletableFuture.failedFuture(new RuntimeException("Kafka down")));
 
-    var error = assertThrows(IllegalStateException.class, () -> new KafkaMessage(template, properties()).publish(event));
+    var error = assertThrows(IllegalStateException.class, () -> new KafkaMessage(template).publish(event.getTopic(), event));
     assertEquals("Could not publish outbox event", error.getMessage());
   }
 
-  private OutboxWorkerProperties properties() {
-    return new OutboxWorkerProperties(true, 1000, 20, 3, 5, 60, 30, "document.uploaded");
-  }
 }

@@ -31,7 +31,7 @@ public class DocumentUploadedOutboxEventMapper {
               "contentType", event.contentType(),
               "sizeBytes", event.sizeBytes())));
       return new OutboxEvent(
-          event.id(), EVENT_TYPE, payload, 0,
+          event.id(), EVENT_TYPE, EVENT_TYPE, payload, 0,
           event.occurredAt(), event.occurredAt(), null, null);
     } catch (JsonProcessingException ex) {
       throw new IllegalStateException("Could not serialize document uploaded event", ex);

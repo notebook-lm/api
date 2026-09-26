@@ -42,12 +42,12 @@ public class JpaOutboxEventAdapter implements OutboxEventRepository {
   }
 
   private OutboxEvent domain(OutboxEventJpaEntity e) {
-    return new OutboxEvent(e.getId(), e.getEventType(), e.getPayload(), e.getAttempts(), e.getNextAttemptAt(),
+    return new OutboxEvent(e.getId(), e.getEventType(), e.getTopic(), e.getPayload(), e.getAttempts(), e.getNextAttemptAt(),
         e.getCreatedAt(), e.getPublishedAt(), e.getLastError());
   }
 
   private OutboxEventJpaEntity entity(OutboxEvent e) {
-    return new OutboxEventJpaEntity(e.getId(), e.getEventType(), e.getPayload(), e.getAttempts(), e.getNextAttemptAt(),
+    return new OutboxEventJpaEntity(e.getId(), e.getEventType(), e.getTopic(), e.getPayload(), e.getAttempts(), e.getNextAttemptAt(),
         e.getCreatedAt(), e.getPublishedAt(), e.getLastError());
   }
 }

@@ -13,6 +13,8 @@ public class OutboxEventJpaEntity {
   private UUID id;
   @Column(name = "event_type", nullable = false)
   private String eventType;
+  @Column(nullable = false)
+  private String topic;
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(nullable = false, columnDefinition = "jsonb")
   private String payload;
@@ -32,10 +34,11 @@ public class OutboxEventJpaEntity {
   protected OutboxEventJpaEntity() {
   }
 
-  public OutboxEventJpaEntity(UUID id, String eventType, String payload, int attempts,
+  public OutboxEventJpaEntity(UUID id, String eventType, String topic, String payload, int attempts,
       Instant nextAttemptAt, Instant createdAt, Instant publishedAt, String lastError) {
     this.id = id;
     this.eventType = eventType;
+    this.topic = topic;
     this.payload = payload;
     this.attempts = attempts;
     this.nextAttemptAt = nextAttemptAt;
@@ -50,6 +53,10 @@ public class OutboxEventJpaEntity {
 
   public String getEventType() {
     return eventType;
+  }
+
+  public String getTopic() {
+    return topic;
   }
 
   public String getPayload() {

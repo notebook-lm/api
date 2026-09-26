@@ -13,7 +13,7 @@ import vn.edu.fsoftacademy.api.domain.entity.OutboxEvent;
 
 class OutboxWorkerTest {
   private final OutboxEvent event = new OutboxEvent(
-      UUID.randomUUID(), "document.uploaded", "{}", 0, Instant.now(), Instant.now(), null, null);
+      UUID.randomUUID(), "document.uploaded", "document.uploaded", "{}", 0, Instant.now(), Instant.now(), null, null);
 
   @Test
   void marksClaimedEventPublishedAfterDelivery() {
@@ -23,7 +23,7 @@ class OutboxWorkerTest {
 
     worker(events, publisher).dispatch();
 
-    verify(publisher).publish(event);
+    verify(publisher).publish(event.getTopic(), event);
     verify(events).markPublished(eq(event), any());
     verify(events, never()).markFailed(any(), any(), any());
   }
@@ -33,7 +33,7 @@ class OutboxWorkerTest {
     var events = mock(OutboxEventRepository.class);
     var publisher = mock(MessagePublisher.class);
     when(events.claimPending(eq(20), any(), any())).thenReturn(List.of(event));
-    doThrow(new IllegalStateException("Kafka unavailable")).when(publisher).publish(event);
+    doThrow(new IllegalStateException("Kafka unavailable")).when(publisher).publish(event.getTopic(), event);
 
     worker(events, publisher).dispatch();
 
@@ -46,9 +46,9 @@ class OutboxWorkerTest {
     var events = mock(OutboxEventRepository.class);
     var publisher = mock(MessagePublisher.class);
     var exhausted = new OutboxEvent(
-        UUID.randomUUID(), "document.uploaded", "{}", 1, Instant.now(), Instant.now(), null, null);
+        UUID.randomUUID(), "document.uploaded", "document.uploaded", "{}", 1, Instant.now(), Instant.now(), null, null);
     when(events.claimPending(eq(20), any(), any())).thenReturn(List.of(exhausted));
-    doThrow(new IllegalStateException("Kafka unavailable")).when(publisher).publish(exhausted);
+    doThrow(new IllegalStateException("Kafka unavailable")).when(publisher).publish(exhausted.getTopic(), exhausted);
 
     worker(events, publisher).dispatch();
 
@@ -56,6 +56,6 @@ class OutboxWorkerTest {
   }
 
   private OutboxWorker worker(OutboxEventRepository events, MessagePublisher publisher) {
-    return new OutboxWorker(events, publisher, new OutboxWorkerProperties(true, 1000, 20, 2, 5, 60, 30, "document.uploaded"));
+    return new OutboxWorker(events, publisher, new OutboxWorkerProperties(true, 1000, 20, 2, 5, 60, 30));
   }
 }

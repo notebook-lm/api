@@ -6,6 +6,7 @@ import java.util.UUID;
 public class OutboxEvent {
   private final UUID id;
   private final String eventType;
+  private final String topic;
   private final String payload;
   private final int attempts;
   private final Instant nextAttemptAt;
@@ -13,10 +14,11 @@ public class OutboxEvent {
   private final Instant publishedAt;
   private final String lastError;
 
-  public OutboxEvent(UUID id, String eventType, String payload, int attempts, Instant nextAttemptAt,
+  public OutboxEvent(UUID id, String eventType, String topic, String payload, int attempts, Instant nextAttemptAt,
       Instant createdAt, Instant publishedAt, String lastError) {
     this.id = id;
     this.eventType = eventType;
+    this.topic = topic;
     this.payload = payload;
     this.attempts = attempts;
     this.nextAttemptAt = nextAttemptAt;
@@ -31,6 +33,10 @@ public class OutboxEvent {
 
   public String getEventType() {
     return eventType;
+  }
+
+  public String getTopic() {
+    return topic;
   }
 
   public String getPayload() {

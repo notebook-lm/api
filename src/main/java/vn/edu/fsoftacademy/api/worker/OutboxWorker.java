@@ -32,7 +32,7 @@ public class OutboxWorker {
     Instant claimedUntil = now.plusSeconds(properties.claimLeaseSeconds());
     events.claimPending(properties.batchSize(), now, claimedUntil).forEach(event -> {
       try {
-        publisher.publish(event);
+        publisher.publish(event.getTopic(), event);
         events.markPublished(event, Instant.now());
       } catch (RuntimeException ex) {
         int nextAttempt = event.getAttempts() + 1;
