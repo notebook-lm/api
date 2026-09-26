@@ -1,5 +1,6 @@
 package vn.edu.fsoftacademy.api.infrastructure.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.context.annotation.Bean;
@@ -43,6 +44,11 @@ import vn.edu.fsoftacademy.api.worker.OutboxWorkerProperties;
 @EnableScheduling
 @EnableConfigurationProperties({ StorageProperties.class, OutboxWorkerProperties.class })
 public class ApplicationWiringConfig {
+  @Bean
+  ObjectMapper objectMapper() {
+    return new ObjectMapper().findAndRegisterModules();
+  }
+
   @Bean
   SessionTokenPort sessionTokenPort(
       AccessTokenPort accessTokens,
