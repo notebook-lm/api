@@ -8,12 +8,18 @@ import java.io.ByteArrayInputStream;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionTemplate;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import vn.edu.fsoftacademy.api.application.mapper.outbox.DocumentUploadedOutboxEventMapper;
 import vn.edu.fsoftacademy.api.application.port.ObjectStorage;
-import vn.edu.fsoftacademy.api.application.repository.*;
+import vn.edu.fsoftacademy.api.application.repository.OutboxEventRepository;
+import vn.edu.fsoftacademy.api.application.repository.ProjectDocumentRepository;
+import vn.edu.fsoftacademy.api.application.repository.ProjectRepository;
 import vn.edu.fsoftacademy.api.domain.entity.Project;
+import vn.edu.fsoftacademy.api.domain.entity.ProjectDocument;
 
 class UploadDocumentCommandHandlerTest {
   @Test
@@ -28,9 +34,16 @@ class UploadDocumentCommandHandlerTest {
         .thenReturn(
             Optional.of(new Project(project, owner, "P", null, Instant.now(), Instant.now())));
     when(documents.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+    var transactionManager = mock(PlatformTransactionManager.class);
+    when(transactionManager.getTransaction(any())).thenReturn(mock(TransactionStatus.class));
     var handler = new UploadDocumentCommandHandler(
-        projects, documents, storage, outboxEvents,
-        new DocumentUploadedOutboxEventMapper(new ObjectMapper()));
+        projects,
+        documents,
+        storage,
+        outboxEvents,
+        new DocumentUploadedOutboxEventMapper(new ObjectMapper()),
+        new TransactionTemplate(transactionManager));
+
     var result =
         handler.execute(
             owner,
@@ -41,6 +54,7 @@ class UploadDocumentCommandHandlerTest {
                 "application/pdf",
                 3,
                 new ByteArrayInputStream(new byte[] {1, 2, 3})));
+
     assertEquals("Source", result.title());
     verify(storage)
         .put(
@@ -51,10 +65,10 @@ class UploadDocumentCommandHandlerTest {
     verify(documents)
         .save(
             argThat(
-                d ->
-                    d.getId().equals(result.id())
-                        && d.getProjectId().equals(project)
-                        && d.getOriginalFilename().equals("source.pdf")));
+                document ->
+                    document.getId().equals(result.id())
+                        && document.getProjectId().equals(project)
+                        && document.getOriginalFilename().equals("source.pdf")));
     verify(outboxEvents).save(argThat(event ->
         event.getEventType().equals("document.uploaded") && event.getPayload().contains(result.id().toString())));
   }

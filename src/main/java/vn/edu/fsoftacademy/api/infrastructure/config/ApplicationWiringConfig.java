@@ -124,10 +124,14 @@ public class ApplicationWiringConfig {
 
   @Bean
   UploadDocumentCommandHandler uploadDocumentCommandHandler(
-      ProjectRepository projects, ProjectDocumentRepository documents, ObjectStorage storage,
-      OutboxEventRepository outboxEvents, DocumentUploadedOutboxEventMapper outboxEventMapper) {
+      ProjectRepository projects,
+      ProjectDocumentRepository documents,
+      ObjectStorage storage,
+      OutboxEventRepository outboxEvents,
+      DocumentUploadedOutboxEventMapper outboxEventMapper,
+      org.springframework.transaction.support.TransactionTemplate transactionTemplate) {
     return new UploadDocumentCommandHandler(
-        projects, documents, storage, outboxEvents, outboxEventMapper);
+        projects, documents, storage, outboxEvents, outboxEventMapper, transactionTemplate);
   }
 
   @Bean

@@ -1,7 +1,8 @@
 package vn.edu.fsoftacademy.api.application.command.uploaddocument;
 
+import java.time.Instant;
 import java.util.UUID;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import vn.edu.fsoftacademy.api.application.exception.ProjectNotFoundException;
 import vn.edu.fsoftacademy.api.application.mapper.outbox.DocumentUploadedOutboxEventMapper;
 import vn.edu.fsoftacademy.api.application.port.ObjectStorage;
@@ -17,37 +18,48 @@ public class UploadDocumentCommandHandler {
   private final ObjectStorage storage;
   private final OutboxEventRepository outboxEvents;
   private final DocumentUploadedOutboxEventMapper outboxEventMapper;
+  private final TransactionTemplate transactionTemplate;
 
   public UploadDocumentCommandHandler(
-      ProjectRepository projects, ProjectDocumentRepository documents, ObjectStorage storage,
-      OutboxEventRepository outboxEvents, DocumentUploadedOutboxEventMapper outboxEventMapper) {
+      ProjectRepository projects,
+      ProjectDocumentRepository documents,
+      ObjectStorage storage,
+      OutboxEventRepository outboxEvents,
+      DocumentUploadedOutboxEventMapper outboxEventMapper,
+      TransactionTemplate transactionTemplate) {
     this.projects = projects;
     this.documents = documents;
     this.storage = storage;
     this.outboxEvents = outboxEvents;
     this.outboxEventMapper = outboxEventMapper;
+    this.transactionTemplate = transactionTemplate;
   }
 
-  @Transactional
   public UploadDocumentResult execute(UUID ownerId, UUID projectId, UploadDocumentCommand command) {
     projects.findByIdAndOwnerId(projectId, ownerId).orElseThrow(ProjectNotFoundException::new);
     var id = UUID.randomUUID();
     var key = "projects/" + projectId + "/documents/" + id;
     storage.put(key, command.content(), command.sizeBytes(), command.contentType());
     try {
-      var document = documents.save(
-          new ProjectDocument(
-              id,
-              projectId,
-              command.title(),
-              command.originalFilename(),
-              command.contentType(),
-              command.sizeBytes(),
-              key,
-              java.time.Instant.now(),
-              java.time.Instant.now()));
-      var event = DocumentUploadedEvent.from(document);
-      outboxEvents.save(outboxEventMapper.toOutboxEvent(event));
+      var document = transactionTemplate.execute(status -> {
+        Instant now = Instant.now();
+        var saved = documents.save(
+            new ProjectDocument(
+                id,
+                projectId,
+                command.title(),
+                command.originalFilename(),
+                command.contentType(),
+                command.sizeBytes(),
+                key,
+                now,
+                now));
+        outboxEvents.save(outboxEventMapper.toOutboxEvent(DocumentUploadedEvent.from(saved)));
+        return saved;
+      });
+      if (document == null) {
+        throw new IllegalStateException("Could not persist uploaded document");
+      }
       return new UploadDocumentResult(
           document.getId(),
           document.getProjectId(),
