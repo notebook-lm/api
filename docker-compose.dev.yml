@@ -1,28 +1,24 @@
 services:
-  postgres:
+  api-postgres:
     ports:
       - "${DB_PORT:-5432}:5432"
 
-  minio:
-    ports:
-      - "${MINIO_API_PORT:-9000}:9000"
-      - "${MINIO_CONSOLE_PORT:-9001}:9001"
 
   flyway:
     image: flyway/flyway:11-alpine
     command: migrate
     environment:
-      FLYWAY_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-notebook_lm}
+      FLYWAY_URL: jdbc:postgresql://${DB_HOST:-api-postgres}:${DB_PORT:-5432}/${DB_NAME:-notebook_lm}
       FLYWAY_USER: ${DB_USER:-postgres}
       FLYWAY_PASSWORD: ${DB_PASSWORD:-postgres}
       FLYWAY_CONNECT_RETRIES: 12
     volumes:
       - ./src/main/resources/db/migration:/flyway/sql:ro
     depends_on:
-      postgres:
+      api-postgres:
         condition: service_healthy
     networks:
-      - backend
+      - notebook-lm
 
   api:
     build:
@@ -35,14 +31,15 @@ services:
       APP_PORT: ${APP_PORT:-8080}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
       DB_NAME: ${DB_NAME:-notebook_lm}
-      DB_HOST: postgres
+      DB_HOST: ${DB_HOST:-api-postgres}
       DB_PORT: 5432
       DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
       JWT_SECRET: ${JWT_SECRET:-bG9jYWwtZGV2ZWxvcG1lbnQtc2VjcmV0LW11c3QtYmUtYXQtbGVhc3QtMzItYnl0ZXM=}
       JWT_ACCESS_TOKEN_TTL: ${JWT_ACCESS_TOKEN_TTL:-PT15M}
       JWT_REFRESH_TOKEN_TTL: ${JWT_REFRESH_TOKEN_TTL:-P30D}
-      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:?MINIO_ENDPOINT is required}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:?KAFKA_BOOTSTRAP_SERVERS is required}
       MINIO_BUCKET: ${MINIO_BUCKET:-notebook-lm}
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
@@ -55,7 +52,7 @@ services:
       flyway:
         condition: service_completed_successfully
     networks:
-      - backend
+      - notebook-lm
 
 volumes:
   gradle-cache:
