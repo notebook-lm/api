@@ -11,16 +11,12 @@ public class MinioObjectStorage implements ObjectStorage {
     private final MinioClient client;
     private final String bucket;
 
-    public MinioObjectStorage(StorageProperties p) {
-        this(MinioClient.builder()
-                .endpoint(p.endpoint())
-                .credentials(p.accessKey(), p.secretKey())
-                .build(), p.bucket());
-    }
-
-    MinioObjectStorage(MinioClient client, String bucket) {
-        this.client = client;
-        this.bucket = bucket;
+    public MinioObjectStorage(StorageProperties properties) {
+        this.client = MinioClient.builder()
+                .endpoint(properties.endpoint())
+                .credentials(properties.accessKey(), properties.secretKey())
+                .build();
+        this.bucket = properties.bucket();
     }
 
     private void ensureBucket() {

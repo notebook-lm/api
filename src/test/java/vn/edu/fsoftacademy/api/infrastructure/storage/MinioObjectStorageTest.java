@@ -17,6 +17,7 @@ import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
 import java.io.ByteArrayInputStream;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 import vn.edu.fsoftacademy.api.application.exception.StorageException;
 
 class MinioObjectStorageTest {
@@ -27,7 +28,7 @@ class MinioObjectStorageTest {
     var client = mock(MinioClient.class);
     when(client.bucketExists(any(BucketExistsArgs.class))).thenReturn(false);
 
-    new MinioObjectStorage(client, BUCKET)
+    storage(client)
         .put("projects/p/documents/d", new ByteArrayInputStream(new byte[] {1, 2}), 2, "text/plain");
 
     verify(client).makeBucket(argThat(args -> BUCKET.equals(args.bucket())));
@@ -40,7 +41,7 @@ class MinioObjectStorageTest {
     var client = mock(MinioClient.class);
     when(client.bucketExists(any(BucketExistsArgs.class))).thenReturn(true);
 
-    new MinioObjectStorage(client, BUCKET).put("key", new ByteArrayInputStream(new byte[0]), 0, "text/plain");
+    storage(client).put("key", new ByteArrayInputStream(new byte[0]), 0, "text/plain");
 
     verify(client).putObject(any(PutObjectArgs.class));
     verify(client, org.mockito.Mockito.never()).makeBucket(any(MakeBucketArgs.class));
@@ -52,7 +53,7 @@ class MinioObjectStorageTest {
     when(client.bucketExists(any(BucketExistsArgs.class))).thenThrow(new RuntimeException("access denied"));
 
     var error = assertThrows(StorageException.class,
-        () -> new MinioObjectStorage(client, BUCKET).put("key", new ByteArrayInputStream(new byte[0]), 0, "text/plain"));
+        () -> storage(client).put("key", new ByteArrayInputStream(new byte[0]), 0, "text/plain"));
 
     assertEquals("Could not initialize document storage", error.getMessage());
   }
@@ -63,16 +64,23 @@ class MinioObjectStorageTest {
     when(putClient.bucketExists(any(BucketExistsArgs.class))).thenReturn(true);
     doThrow(new RuntimeException("write failed")).when(putClient).putObject(any(PutObjectArgs.class));
     assertEquals("Could not store document", assertThrows(StorageException.class,
-        () -> new MinioObjectStorage(putClient, BUCKET).put("key", new ByteArrayInputStream(new byte[0]), 0, "text/plain")).getMessage());
+        () -> storage(putClient).put("key", new ByteArrayInputStream(new byte[0]), 0, "text/plain")).getMessage());
 
     var getClient = mock(MinioClient.class);
     doThrow(new RuntimeException("read failed")).when(getClient).getObject(any(GetObjectArgs.class));
     assertEquals("Could not load document", assertThrows(StorageException.class,
-        () -> new MinioObjectStorage(getClient, BUCKET).get("key")).getMessage());
+        () -> storage(getClient).get("key")).getMessage());
 
     var deleteClient = mock(MinioClient.class);
     doThrow(new RuntimeException("delete failed")).when(deleteClient).removeObject(any(RemoveObjectArgs.class));
     assertEquals("Could not delete document", assertThrows(StorageException.class,
-        () -> new MinioObjectStorage(deleteClient, BUCKET).delete("key")).getMessage());
+        () -> storage(deleteClient).delete("key")).getMessage());
+  }
+
+  private static MinioObjectStorage storage(MinioClient client) {
+    var storage = new MinioObjectStorage(
+        new StorageProperties("http://localhost:9000", BUCKET, "test-access", "test-secret"));
+    ReflectionTestUtils.setField(storage, "client", client);
+    return storage;
   }
 }
