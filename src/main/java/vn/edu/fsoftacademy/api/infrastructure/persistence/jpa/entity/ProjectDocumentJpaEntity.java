@@ -3,6 +3,7 @@ package vn.edu.fsoftacademy.api.infrastructure.persistence.jpa.entity;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
+import vn.edu.fsoftacademy.api.domain.entity.DocumentProcessingStatus;
 
 @Entity
 @Table(name = "project_documents")
@@ -33,6 +34,10 @@ public class ProjectDocumentJpaEntity {
   @Column(name = "updated_at", nullable = false)
   private Instant updatedAt;
 
+  @Enumerated(EnumType.STRING)
+  @Column(name = "processing_status", nullable = false)
+  private DocumentProcessingStatus processingStatus;
+
   protected ProjectDocumentJpaEntity() {}
 
   public ProjectDocumentJpaEntity(
@@ -44,7 +49,8 @@ public class ProjectDocumentJpaEntity {
       long sizeBytes,
       String objectKey,
       Instant createdAt,
-      Instant updatedAt) {
+      Instant updatedAt,
+      DocumentProcessingStatus processingStatus) {
     this.id = id;
     this.projectId = projectId;
     this.title = title;
@@ -54,6 +60,7 @@ public class ProjectDocumentJpaEntity {
     this.objectKey = objectKey;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
+    this.processingStatus = processingStatus;
   }
 
   public UUID getId() {
@@ -83,6 +90,8 @@ public class ProjectDocumentJpaEntity {
   public String getObjectKey() {
     return objectKey;
   }
+
+  public DocumentProcessingStatus getProcessingStatus() { return processingStatus; }
 
   public Instant getCreatedAt() {
     return createdAt;

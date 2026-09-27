@@ -49,6 +49,6 @@ public class JpaProjectDocumentAdapter implements ProjectDocumentRepository {
       return builder.and(predicates.toArray(Predicate[]::new));
     };
   }
-  private ProjectDocument domain(ProjectDocumentJpaEntity e) { return new ProjectDocument(e.getId(), e.getProjectId(), e.getTitle(), e.getOriginalFilename(), e.getContentType(), e.getSizeBytes(), e.getObjectKey(), e.getCreatedAt(), e.getUpdatedAt()); }
-  private ProjectDocumentJpaEntity entity(ProjectDocument d) { return new ProjectDocumentJpaEntity(d.getId(), d.getProjectId(), d.getTitle(), d.getOriginalFilename(), d.getContentType(), d.getSizeBytes(), d.getObjectKey(), d.getCreatedAt(), d.getUpdatedAt()); }
+  private ProjectDocument domain(ProjectDocumentJpaEntity e) { return new ProjectDocument(e.getId(), e.getProjectId(), e.getTitle(), e.getOriginalFilename(), e.getContentType(), e.getSizeBytes(), e.getObjectKey(), e.getCreatedAt(), e.getUpdatedAt(), e.getProcessingStatus()); }
+  private ProjectDocumentJpaEntity entity(ProjectDocument d) { return new ProjectDocumentJpaEntity(d.getId(), d.getProjectId(), d.getTitle(), d.getOriginalFilename(), d.getContentType(), d.getSizeBytes(), d.getObjectKey(), d.getCreatedAt(), d.getUpdatedAt(), d.getProcessingStatus()); }
 }

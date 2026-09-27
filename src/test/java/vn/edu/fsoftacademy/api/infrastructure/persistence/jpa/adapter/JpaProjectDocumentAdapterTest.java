@@ -16,6 +16,7 @@ import org.springframework.data.jpa.domain.Specification;
 import vn.edu.fsoftacademy.api.application.query.listdocuments.DocumentSortDirection;
 import vn.edu.fsoftacademy.api.application.query.listdocuments.DocumentSortField;
 import vn.edu.fsoftacademy.api.application.query.listdocuments.ListDocumentsQuery;
+import vn.edu.fsoftacademy.api.domain.entity.DocumentProcessingStatus;
 import vn.edu.fsoftacademy.api.infrastructure.persistence.jpa.entity.ProjectDocumentJpaEntity;
 import vn.edu.fsoftacademy.api.infrastructure.persistence.jpa.repository.ProjectDocumentJpaRepository;
 
@@ -36,7 +37,8 @@ class JpaProjectDocumentAdapterTest {
             5,
             "object-key",
             Instant.now(),
-            Instant.now());
+            Instant.now(),
+            DocumentProcessingStatus.PENDING);
     var query =
         new ListDocumentsQuery(
             "source", null, null, DocumentSortField.UPDATED_AT, DocumentSortDirection.ASC, 0, 20);

@@ -67,6 +67,7 @@ public class UploadDocumentCommandHandler {
           document.getOriginalFilename(),
           document.getContentType(),
           document.getSizeBytes(),
+          document.getProcessingStatus(),
           document.getCreatedAt(),
           document.getUpdatedAt());
     } catch (RuntimeException ex) {

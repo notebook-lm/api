@@ -18,6 +18,7 @@ import vn.edu.fsoftacademy.api.application.port.ObjectStorage;
 import vn.edu.fsoftacademy.api.application.query.getdocument.GetDocumentQueryHandler;
 import vn.edu.fsoftacademy.api.application.query.listdocuments.ListDocumentsQueryHandler;
 import vn.edu.fsoftacademy.api.application.query.listdocuments.ListDocumentsResult;
+import vn.edu.fsoftacademy.api.domain.entity.DocumentProcessingStatus;
 import vn.edu.fsoftacademy.api.domain.entity.ProjectDocument;
 
 class ProjectDocumentControllerTest {
@@ -49,7 +50,8 @@ class ProjectDocumentControllerTest {
     when(upload.execute(eq(ownerId), eq(projectId), any()))
         .thenReturn(
             new UploadDocumentResult(
-                documentId, projectId, "source.pdf", "source.pdf", "application/pdf", 3, now, now));
+                documentId, projectId, "source.pdf", "source.pdf", "application/pdf", 3,
+                DocumentProcessingStatus.PENDING, now, now));
     var file = new MockMultipartFile("file", "source.pdf", "application/pdf", new byte[] {1, 2, 3});
     var response = controller.upload(ownerId, projectId, file, null);
     assertEquals(documentId, response.id());
