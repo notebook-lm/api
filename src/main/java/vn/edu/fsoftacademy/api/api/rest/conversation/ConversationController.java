@@ -116,13 +116,20 @@ public class ConversationController {
     public ResponseEntity<SseEmitter> stream(@AuthenticationPrincipal UUID ownerId, @PathVariable UUID projectId,
             @PathVariable UUID conversationId, @Valid @RequestBody StreamMessageRequest request) {
         SseEmitter emitter = new SseEmitter(0L);
+        ChatMessage assistant = stream.start(ownerId, projectId, conversationId, request.content().strip());
+        Runnable cancel = () -> stream.cancel(ownerId, projectId, conversationId, assistant.getId());
+        emitter.onCompletion(cancel);
+        emitter.onTimeout(cancel);
         CompletableFuture.runAsync(() -> {
             try {
-                ChatMessage result = stream.stream(ownerId, projectId, conversationId, request.content().strip(),
+                send(emitter, "started", message(assistant));
+                ChatMessage result = stream.generate(conversationId, assistant,
                         delta -> send(emitter, "message", Map.of("delta", delta)));
-                send(emitter, "done", message(result));
+                if (result.getStatus() == ChatMessageStatus.COMPLETED)
+                    send(emitter, "done", message(result));
                 emitter.complete();
             } catch (Exception ex) {
+                cancel.run();
                 try {
                     send(emitter, "error", Map.of("message", safeMessage(ex)));
                 } catch (Exception ignored) {
@@ -132,6 +139,14 @@ public class ConversationController {
         });
         return ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL, "no-cache, no-transform")
                 .header("X-Accel-Buffering", "no").body(emitter);
+    }
+
+    @PostMapping("/{conversationId}/messages/{messageId}:cancel")
+    @PreAuthorize("hasAuthority('conversation:message:create')")
+    @Operation(summary = "Cancel an active AI response")
+    public ChatMessageResponse cancel(@AuthenticationPrincipal UUID ownerId, @PathVariable UUID projectId,
+            @PathVariable UUID conversationId, @PathVariable UUID messageId) {
+        return message(stream.cancel(ownerId, projectId, conversationId, messageId));
     }
 
     private void send(SseEmitter emitter, String event, Object data) {

@@ -3,6 +3,7 @@ package vn.edu.fsoftacademy.api.application.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.*;
 
 import java.time.Instant;
@@ -35,10 +36,11 @@ class ChatStreamingServiceTest {
       callback.accept("Hello");
       callback.accept(" world");
       return null;
-    }).when(provider).stream(anyList(), any());
+    }).when(provider).stream(anyList(), any(), any());
 
     var service = new ChatStreamingService(conversations, conversationStore, messages, provider);
-    var result = service.stream(ownerId, projectId, conversationId, "What is this?", ignored -> {});
+    var assistant = service.start(ownerId, projectId, conversationId, "What is this?");
+    var result = service.generate(conversationId, assistant, ignored -> {});
 
     assertEquals(ChatMessageRole.ASSISTANT, result.getRole());
     assertEquals(ChatMessageStatus.COMPLETED, result.getStatus());

@@ -22,6 +22,10 @@ public class JpaChatMessageAdapter implements ChatMessageRepository {
         return m;
     }
 
+    public Optional<ChatMessage> findById(UUID messageId) {
+        return messages.findById(messageId).map(this::toDomain);
+    }
+
     public List<ChatMessage> findAllByConversationId(UUID id) {
         return messages.findAllByConversationIdOrderByCreatedAtAscIdAsc(id).stream().map(this::toDomain).toList();
     }

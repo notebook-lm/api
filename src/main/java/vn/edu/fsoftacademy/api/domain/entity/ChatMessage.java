@@ -45,6 +45,11 @@ public class ChatMessage {
     this.updatedAt = Instant.now();
   }
 
+  public void cancel() {
+    this.status = ChatMessageStatus.CANCELLED;
+    this.updatedAt = Instant.now();
+  }
+
   public UUID getId() {
     return id;
   }
