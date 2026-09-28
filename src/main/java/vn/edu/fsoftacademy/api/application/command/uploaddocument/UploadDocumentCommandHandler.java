@@ -10,7 +10,7 @@ import vn.edu.fsoftacademy.api.application.repository.OutboxEventRepository;
 import vn.edu.fsoftacademy.api.application.repository.ProjectDocumentRepository;
 import vn.edu.fsoftacademy.api.application.repository.ProjectRepository;
 import vn.edu.fsoftacademy.api.domain.entity.ProjectDocument;
-import vn.edu.fsoftacademy.api.domain.event.DocumentUploadedEvent;
+import vn.edu.fsoftacademy.api.application.event.documentuploaded.DocumentUploadedEvent;
 
 public class UploadDocumentCommandHandler {
   private final ProjectRepository projects;

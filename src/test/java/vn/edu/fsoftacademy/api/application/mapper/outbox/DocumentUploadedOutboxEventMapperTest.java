@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
-import vn.edu.fsoftacademy.api.domain.event.DocumentUploadedEvent;
+import vn.edu.fsoftacademy.api.application.event.documentuploaded.DocumentUploadedEvent;
 
 class DocumentUploadedOutboxEventMapperTest {
   @Test

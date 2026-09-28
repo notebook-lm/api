@@ -1,4 +1,4 @@
-package vn.edu.fsoftacademy.api.domain.event;
+package vn.edu.fsoftacademy.api.application.event.documentuploaded;
 
 import java.time.Instant;
 import java.util.UUID;

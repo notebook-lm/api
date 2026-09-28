@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
 import org.springframework.stereotype.Component;
 import vn.edu.fsoftacademy.api.domain.entity.OutboxEvent;
-import vn.edu.fsoftacademy.api.domain.event.DocumentUploadedEvent;
+import vn.edu.fsoftacademy.api.application.event.documentuploaded.DocumentUploadedEvent;
 
 @Component
 public class DocumentUploadedOutboxEventMapper {
