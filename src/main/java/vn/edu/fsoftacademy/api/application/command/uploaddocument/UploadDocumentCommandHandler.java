@@ -3,14 +3,15 @@ package vn.edu.fsoftacademy.api.application.command.uploaddocument;
 import java.time.Instant;
 import java.util.UUID;
 import org.springframework.transaction.support.TransactionTemplate;
+import vn.edu.fsoftacademy.api.application.event.documentuploaded.DocumentUploadedEvent;
 import vn.edu.fsoftacademy.api.application.exception.ProjectNotFoundException;
 import vn.edu.fsoftacademy.api.application.mapper.outbox.DocumentUploadedOutboxEventMapper;
 import vn.edu.fsoftacademy.api.application.port.ObjectStorage;
 import vn.edu.fsoftacademy.api.application.repository.OutboxEventRepository;
 import vn.edu.fsoftacademy.api.application.repository.ProjectDocumentRepository;
 import vn.edu.fsoftacademy.api.application.repository.ProjectRepository;
+import vn.edu.fsoftacademy.api.domain.entity.OutboxEvent;
 import vn.edu.fsoftacademy.api.domain.entity.ProjectDocument;
-import vn.edu.fsoftacademy.api.application.event.documentuploaded.DocumentUploadedEvent;
 
 public class UploadDocumentCommandHandler {
   private final ProjectRepository projects;
@@ -54,7 +55,28 @@ public class UploadDocumentCommandHandler {
                 key,
                 now,
                 now));
-        outboxEvents.save(outboxEventMapper.toOutboxEvent(DocumentUploadedEvent.from(saved)));
+        var event = new DocumentUploadedEvent(
+            UUID.randomUUID(),
+            Instant.now(),
+            ownerId,
+            saved.getId(),
+            saved.getProjectId(),
+            saved.getObjectKey(),
+            saved.getOriginalFilename(),
+            saved.getContentType(),
+            saved.getSizeBytes());
+        var payload = outboxEventMapper.toPayload(event);
+        var outboxEvent = new OutboxEvent(
+            event.id(),
+            "document.uploaded",
+            "document.uploaded",
+            payload,
+            0,
+            event.occurredAt(),
+            event.occurredAt(),
+            null,
+            null);
+        outboxEvents.save(outboxEvent);
         return saved;
       });
       if (document == null) {
@@ -78,4 +100,5 @@ public class UploadDocumentCommandHandler {
       throw ex;
     }
   }
+
 }

@@ -23,6 +23,7 @@ import vn.edu.fsoftacademy.api.application.command.uploaddocument.UploadDocument
 import vn.edu.fsoftacademy.api.application.eventhandler.documentprocessing.DocumentProcessingEventHandler;
 import vn.edu.fsoftacademy.api.application.mapper.outbox.DocumentUploadedOutboxEventMapper;
 import vn.edu.fsoftacademy.api.application.port.AccessTokenPort;
+import vn.edu.fsoftacademy.api.application.port.JsonMapper;
 import vn.edu.fsoftacademy.api.application.port.ObjectStorage;
 import vn.edu.fsoftacademy.api.application.port.PasswordHasher;
 import vn.edu.fsoftacademy.api.application.port.RefreshTokenPort;

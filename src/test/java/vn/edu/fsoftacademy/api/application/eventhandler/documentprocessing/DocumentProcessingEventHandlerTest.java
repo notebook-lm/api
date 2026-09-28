@@ -22,7 +22,12 @@ class DocumentProcessingEventHandlerTest {
 
     eventHandler.handle(
         new DocumentProcessingEvent(
-            UUID.randomUUID(), "document.processing", projectId, documentId, "PROCESSING"));
+            UUID.randomUUID(),
+            "document.processing",
+            UUID.randomUUID(),
+            projectId,
+            documentId,
+            "PROCESSING"));
 
     verify(commandHandler)
         .execute(
@@ -40,7 +45,12 @@ class DocumentProcessingEventHandlerTest {
       var documentId = UUID.randomUUID();
       eventHandler.handle(
           new DocumentProcessingEvent(
-              UUID.randomUUID(), "document.processing", projectId, documentId, status.name()));
+              UUID.randomUUID(),
+              "document.processing",
+              UUID.randomUUID(),
+              projectId,
+              documentId,
+              status.name()));
       verify(commandHandler)
           .execute(new UpdateDocumentProcessingStatusCommand(projectId, documentId, status));
     }
@@ -61,6 +71,7 @@ class DocumentProcessingEventHandlerTest {
                         "document.processed",
                         UUID.randomUUID(),
                         UUID.randomUUID(),
+                        UUID.randomUUID(),
                         "PROCESSING")));
 
     assertEquals("Unexpected event type: document.processed", error.getMessage());
@@ -79,6 +90,7 @@ class DocumentProcessingEventHandlerTest {
                 new DocumentProcessingEvent(
                     UUID.randomUUID(),
                     "document.processing",
+                    UUID.randomUUID(),
                     UUID.randomUUID(),
                     UUID.randomUUID(),
                     "FAILED")));

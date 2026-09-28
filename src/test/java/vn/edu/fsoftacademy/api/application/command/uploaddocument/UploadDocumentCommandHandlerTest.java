@@ -12,8 +12,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionTemplate;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import vn.edu.fsoftacademy.api.application.mapper.outbox.DocumentUploadedOutboxEventMapper;
+import vn.edu.fsoftacademy.api.application.port.JsonMapper;
 import vn.edu.fsoftacademy.api.application.port.ObjectStorage;
 import vn.edu.fsoftacademy.api.application.repository.OutboxEventRepository;
 import vn.edu.fsoftacademy.api.application.repository.ProjectDocumentRepository;
@@ -35,13 +35,15 @@ class UploadDocumentCommandHandlerTest {
             Optional.of(new Project(project, owner, "P", null, Instant.now(), Instant.now())));
     when(documents.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
     var transactionManager = mock(PlatformTransactionManager.class);
+    var jsonMapper = mock(JsonMapper.class);
     when(transactionManager.getTransaction(any())).thenReturn(mock(TransactionStatus.class));
+    when(jsonMapper.write(any())).thenAnswer(invocation -> invocation.getArgument(0).toString());
     var handler = new UploadDocumentCommandHandler(
         projects,
         documents,
         storage,
         outboxEvents,
-        new DocumentUploadedOutboxEventMapper(new ObjectMapper()),
+        new DocumentUploadedOutboxEventMapper(jsonMapper),
         new TransactionTemplate(transactionManager));
 
     var result =

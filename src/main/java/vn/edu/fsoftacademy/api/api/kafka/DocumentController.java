@@ -34,6 +34,7 @@ public class DocumentController {
           new DocumentProcessingEvent(
               kafkaEvent.eventId(),
               kafkaEvent.eventType(),
+              data.userId(),
               data.projectId(),
               data.documentId(),
               data.status()));

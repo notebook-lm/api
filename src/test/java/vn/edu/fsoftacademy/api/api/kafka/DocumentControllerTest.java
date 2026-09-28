@@ -16,18 +16,19 @@ class DocumentControllerTest {
   @Test
   void mapsValidKafkaDtoToApplicationEvent() {
     var eventHandler = mock(DocumentProcessingEventHandler.class);
+    var userId = UUID.randomUUID();
     var projectId = UUID.randomUUID();
     var documentId = UUID.randomUUID();
     var eventId = UUID.randomUUID();
     var controller = new DocumentController(new ObjectMapper(), eventHandler);
-    var payload = validPayload(eventId, documentId, projectId, "PROCESSING");
+    var payload = validPayload(eventId, userId, documentId, projectId, "PROCESSING");
 
     controller.handleDocumentProcessing(payload);
 
     verify(eventHandler)
         .handle(
             new DocumentProcessingEvent(
-                eventId, "document.processing", projectId, documentId, "PROCESSING"));
+                eventId, "document.processing", userId, projectId, documentId, "PROCESSING"));
   }
 
   @Test
@@ -59,10 +60,12 @@ class DocumentControllerTest {
   @Test
   void wrapsApplicationHandlerFailure() {
     var eventHandler = mock(DocumentProcessingEventHandler.class);
+    var userId = UUID.randomUUID();
     var projectId = UUID.randomUUID();
     var documentId = UUID.randomUUID();
     var eventId = UUID.randomUUID();
-    var event = new DocumentProcessingEvent(eventId, "document.processing", projectId, documentId, "PROCESSING");
+    var event = new DocumentProcessingEvent(
+        eventId, "document.processing", userId, projectId, documentId, "PROCESSING");
     doThrow(new IllegalArgumentException("Unexpected event type: document.processed"))
         .when(eventHandler)
         .handle(event);
@@ -71,16 +74,17 @@ class DocumentControllerTest {
     var error =
         assertThrows(
             IllegalStateException.class,
-            () -> controller.handleDocumentProcessing(validPayload(eventId, documentId, projectId, "PROCESSING")));
+            () -> controller.handleDocumentProcessing(validPayload(eventId, userId, documentId, projectId, "PROCESSING")));
 
     assertEquals("Could not process document.processing event", error.getMessage());
     assertEquals("Unexpected event type: document.processed", error.getCause().getMessage());
   }
 
-  private String validPayload(UUID eventId, UUID documentId, UUID projectId, String status) {
+  private String validPayload(
+      UUID eventId, UUID userId, UUID documentId, UUID projectId, String status) {
     return """
-        {"eventId":"%s","eventType":"document.processing","occurredAt":"2026-09-27T22:48:53.689623351Z","data":{"documentId":"%s","projectId":"%s","status":"%s"}}
+        {"eventId":"%s","eventType":"document.processing","occurredAt":"2026-09-27T22:48:53.689623351Z","data":{"userId":"%s","documentId":"%s","projectId":"%s","status":"%s"}}
         """
-        .formatted(eventId, documentId, projectId, status);
+        .formatted(eventId, userId, documentId, projectId, status);
   }
 }
