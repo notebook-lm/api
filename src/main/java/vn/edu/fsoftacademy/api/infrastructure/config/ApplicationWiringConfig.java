@@ -8,6 +8,9 @@ import org.springframework.context.annotation.Configuration;
 import vn.edu.fsoftacademy.api.application.command.changeemail.ChangeEmailCommandHandler;
 import vn.edu.fsoftacademy.api.application.command.changepassword.ChangePasswordCommandHandler;
 import vn.edu.fsoftacademy.api.application.command.createproject.CreateProjectCommandHandler;
+import vn.edu.fsoftacademy.api.application.command.createconversation.CreateConversationCommandHandler;
+import vn.edu.fsoftacademy.api.application.command.updateconversation.UpdateConversationCommandHandler;
+import vn.edu.fsoftacademy.api.application.command.deleteconversation.DeleteConversationCommandHandler;
 import vn.edu.fsoftacademy.api.application.command.deleteaccount.DeleteAccountCommandHandler;
 import vn.edu.fsoftacademy.api.application.command.deletedocument.DeleteDocumentCommandHandler;
 import vn.edu.fsoftacademy.api.application.command.deleteproject.DeleteProjectCommandHandler;
@@ -23,6 +26,7 @@ import vn.edu.fsoftacademy.api.application.command.uploaddocument.UploadDocument
 import vn.edu.fsoftacademy.api.application.eventhandler.documentprocessing.DocumentProcessingEventHandler;
 import vn.edu.fsoftacademy.api.application.mapper.outbox.DocumentUploadedOutboxEventMapper;
 import vn.edu.fsoftacademy.api.application.port.AccessTokenPort;
+import vn.edu.fsoftacademy.api.application.port.AiChatProvider;
 import vn.edu.fsoftacademy.api.application.port.JsonMapper;
 import vn.edu.fsoftacademy.api.application.port.ObjectStorage;
 import vn.edu.fsoftacademy.api.application.port.PasswordHasher;
@@ -30,22 +34,30 @@ import vn.edu.fsoftacademy.api.application.port.RefreshTokenPort;
 import vn.edu.fsoftacademy.api.application.port.SessionTokenPort;
 import vn.edu.fsoftacademy.api.application.query.currentuser.GetCurrentUserQueryHandler;
 import vn.edu.fsoftacademy.api.application.query.getdocument.GetDocumentQueryHandler;
+import vn.edu.fsoftacademy.api.application.query.getconversation.GetConversationQueryHandler;
+import vn.edu.fsoftacademy.api.application.query.listconversations.ListConversationsQueryHandler;
+import vn.edu.fsoftacademy.api.application.query.listchatmessages.ListChatMessagesQueryHandler;
 import vn.edu.fsoftacademy.api.application.query.getproject.GetProjectQueryHandler;
 import vn.edu.fsoftacademy.api.application.query.listdocuments.ListDocumentsQueryHandler;
 import vn.edu.fsoftacademy.api.application.query.listprojects.ListProjectsQueryHandler;
 import vn.edu.fsoftacademy.api.application.repository.OutboxEventRepository;
+import vn.edu.fsoftacademy.api.application.repository.ChatConversationRepository;
+import vn.edu.fsoftacademy.api.application.repository.ChatMessageRepository;
 import vn.edu.fsoftacademy.api.application.repository.ProjectDocumentRepository;
 import vn.edu.fsoftacademy.api.application.repository.ProjectRepository;
 import vn.edu.fsoftacademy.api.application.repository.RefreshSessionRepository;
 import vn.edu.fsoftacademy.api.application.repository.RoleRepository;
 import vn.edu.fsoftacademy.api.application.repository.UserRepository;
 import vn.edu.fsoftacademy.api.application.service.SessionTokenService;
+import vn.edu.fsoftacademy.api.application.service.ChatStreamingService;
+import vn.edu.fsoftacademy.api.infrastructure.ai.GeminiChatProvider;
+import vn.edu.fsoftacademy.api.infrastructure.ai.GeminiProperties;
 import vn.edu.fsoftacademy.api.infrastructure.storage.StorageProperties;
 import vn.edu.fsoftacademy.api.worker.OutboxWorkerProperties;
 
 @Configuration
 @EnableScheduling
-@EnableConfigurationProperties({ StorageProperties.class, OutboxWorkerProperties.class })
+@EnableConfigurationProperties({ StorageProperties.class, OutboxWorkerProperties.class, GeminiProperties.class })
 public class ApplicationWiringConfig {
   @Bean
   ObjectMapper objectMapper() {
@@ -177,6 +189,46 @@ public class ApplicationWiringConfig {
   DeleteDocumentCommandHandler deleteDocumentCommandHandler(
       ProjectRepository projects, ProjectDocumentRepository documents, ObjectStorage storage) {
     return new DeleteDocumentCommandHandler(projects, documents, storage);
+  }
+
+  @Bean
+  CreateConversationCommandHandler createConversationCommandHandler(ProjectRepository projects, ChatConversationRepository conversations) {
+    return new CreateConversationCommandHandler(projects, conversations);
+  }
+
+  @Bean
+  GetConversationQueryHandler getConversationQueryHandler(ProjectRepository projects, ChatConversationRepository conversations) {
+    return new GetConversationQueryHandler(projects, conversations);
+  }
+
+  @Bean
+  ListConversationsQueryHandler listConversationsQueryHandler(ProjectRepository projects, ChatConversationRepository conversations) {
+    return new ListConversationsQueryHandler(projects, conversations);
+  }
+
+  @Bean
+  UpdateConversationCommandHandler updateConversationCommandHandler(ProjectRepository projects, ChatConversationRepository conversations) {
+    return new UpdateConversationCommandHandler(projects, conversations);
+  }
+
+  @Bean
+  DeleteConversationCommandHandler deleteConversationCommandHandler(ProjectRepository projects, ChatConversationRepository conversations) {
+    return new DeleteConversationCommandHandler(projects, conversations);
+  }
+
+  @Bean
+  ListChatMessagesQueryHandler listChatMessagesQueryHandler(GetConversationQueryHandler conversations, ChatMessageRepository messages) {
+    return new ListChatMessagesQueryHandler(conversations, messages);
+  }
+
+  @Bean
+  AiChatProvider aiChatProvider(GeminiProperties properties, ObjectMapper objectMapper) {
+    return new GeminiChatProvider(properties, objectMapper);
+  }
+
+  @Bean
+  ChatStreamingService chatStreamingService(GetConversationQueryHandler conversations, ChatConversationRepository conversationStore, ChatMessageRepository messages, AiChatProvider provider) {
+    return new ChatStreamingService(conversations, conversationStore, messages, provider);
   }
 
   @Bean

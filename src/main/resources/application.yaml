@@ -66,3 +66,9 @@ springdoc:
     persist-authorization: true
     operations-sorter: alpha
     tags-sorter: alpha
+  ai:
+    gemini:
+      api-key: ${GEMINI_API_KEY:}
+      model: ${GEMINI_MODEL:gemini-2.5-flash}
+      base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com}
+      timeout-seconds: ${GEMINI_TIMEOUT_SECONDS:120}
