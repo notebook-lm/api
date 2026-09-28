@@ -193,7 +193,7 @@ public class ProjectDocumentController {
         d.getOriginalFilename(),
         d.getContentType(),
         d.getSizeBytes(),
-        d.getProcessingStatus(),
+        d.getProcessingStatus().name(),
         d.getCreatedAt(),
         d.getUpdatedAt());
   }
@@ -206,7 +206,7 @@ public class ProjectDocumentController {
         d.originalFilename(),
         d.contentType(),
         d.sizeBytes(),
-        d.status(),
+        d.status().name(),
         d.createdAt(),
         d.updatedAt());
   }
