@@ -16,9 +16,11 @@ import vn.edu.fsoftacademy.api.application.command.logout.LogoutCommandHandler;
 import vn.edu.fsoftacademy.api.application.command.refreshsession.RefreshSessionCommandHandler;
 import vn.edu.fsoftacademy.api.application.command.register.RegisterCommandHandler;
 import vn.edu.fsoftacademy.api.application.command.updatedocument.UpdateDocumentCommandHandler;
+import vn.edu.fsoftacademy.api.application.command.updatedocumentprocessingstatus.UpdateDocumentProcessingStatusCommandHandler;
 import vn.edu.fsoftacademy.api.application.command.updateprofile.UpdateProfileCommandHandler;
 import vn.edu.fsoftacademy.api.application.command.updateproject.UpdateProjectCommandHandler;
 import vn.edu.fsoftacademy.api.application.command.uploaddocument.UploadDocumentCommandHandler;
+import vn.edu.fsoftacademy.api.application.eventhandler.documentprocessing.DocumentProcessingEventHandler;
 import vn.edu.fsoftacademy.api.application.mapper.outbox.DocumentUploadedOutboxEventMapper;
 import vn.edu.fsoftacademy.api.application.port.AccessTokenPort;
 import vn.edu.fsoftacademy.api.application.port.ObjectStorage;
@@ -156,6 +158,18 @@ public class ApplicationWiringConfig {
   UpdateDocumentCommandHandler updateDocumentCommandHandler(
       ProjectRepository projects, ProjectDocumentRepository documents) {
     return new UpdateDocumentCommandHandler(projects, documents);
+  }
+
+  @Bean
+  UpdateDocumentProcessingStatusCommandHandler updateDocumentProcessingStatusCommandHandler(
+      ProjectDocumentRepository documents) {
+    return new UpdateDocumentProcessingStatusCommandHandler(documents);
+  }
+
+  @Bean
+  DocumentProcessingEventHandler documentProcessingEventHandler(
+      UpdateDocumentProcessingStatusCommandHandler commandHandler) {
+    return new DocumentProcessingEventHandler(commandHandler);
   }
 
   @Bean
