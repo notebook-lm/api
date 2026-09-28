@@ -50,14 +50,20 @@ import vn.edu.fsoftacademy.api.application.repository.RoleRepository;
 import vn.edu.fsoftacademy.api.application.repository.UserRepository;
 import vn.edu.fsoftacademy.api.application.service.SessionTokenService;
 import vn.edu.fsoftacademy.api.application.service.ChatStreamingService;
+import java.util.Locale;
+import vn.edu.fsoftacademy.api.infrastructure.ai.AiProperties;
 import vn.edu.fsoftacademy.api.infrastructure.ai.GeminiChatProvider;
 import vn.edu.fsoftacademy.api.infrastructure.ai.GeminiProperties;
+import vn.edu.fsoftacademy.api.infrastructure.ai.OpenAiChatProvider;
+import vn.edu.fsoftacademy.api.infrastructure.ai.OpenAiProperties;
 import vn.edu.fsoftacademy.api.infrastructure.storage.StorageProperties;
 import vn.edu.fsoftacademy.api.worker.OutboxWorkerProperties;
 
 @Configuration
 @EnableScheduling
-@EnableConfigurationProperties({ StorageProperties.class, OutboxWorkerProperties.class, GeminiProperties.class })
+@EnableConfigurationProperties({
+    StorageProperties.class, OutboxWorkerProperties.class, AiProperties.class, GeminiProperties.class, OpenAiProperties.class
+})
 public class ApplicationWiringConfig {
   @Bean
   ObjectMapper objectMapper() {
@@ -222,8 +228,18 @@ public class ApplicationWiringConfig {
   }
 
   @Bean
-  AiChatProvider aiChatProvider(GeminiProperties properties, ObjectMapper objectMapper) {
-    return new GeminiChatProvider(properties, objectMapper);
+  AiChatProvider aiChatProvider(
+      AiProperties aiProperties,
+      GeminiProperties geminiProperties,
+      OpenAiProperties openAiProperties,
+      ObjectMapper objectMapper) {
+    String provider = aiProperties.provider() == null ? "gemini" : aiProperties.provider().trim().toLowerCase(Locale.ROOT);
+    return switch (provider) {
+      case "gemini" -> new GeminiChatProvider(geminiProperties, objectMapper);
+      case "openai" -> new OpenAiChatProvider(openAiProperties, objectMapper);
+      default -> throw new IllegalArgumentException(
+          "Unsupported AI_PROVIDER '" + aiProperties.provider() + "'. Supported values: gemini, openai.");
+    };
   }
 
   @Bean
