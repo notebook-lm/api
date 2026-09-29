@@ -16,12 +16,12 @@ public class GeminiChatProvider implements AiChatProvider {
  private final GeminiProperties properties; private final ObjectMapper json; private final HttpClient client;
  public GeminiChatProvider(GeminiProperties properties,ObjectMapper json){this.properties=properties;this.json=json;this.client=HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(properties.timeoutSeconds())).build();}
  public String name(){return "gemini";}
- public void stream(List<ChatMessage> history, Consumer<String> onDelta, BooleanSupplier isCancelled) {
+ public void stream(String systemInstruction, List<ChatMessage> history, Consumer<String> onDelta, BooleanSupplier isCancelled) {
   if(properties.apiKey()==null||properties.apiKey().isBlank()) throw new AiProviderException("Gemini is not configured. Set GEMINI_API_KEY.");
   try {
    List<Map<String,Object>> contents=new ArrayList<>();
    for(ChatMessage m:history) if(m.getStatus().name().equals("COMPLETED")) contents.add(Map.of("role",m.getRole()==ChatMessageRole.ASSISTANT?"model":"user","parts",List.of(Map.of("text",m.getContent()))));
-   String body=json.writeValueAsString(Map.of("contents",contents,"generationConfig",Map.of("temperature",0.7)));
+   Map<String,Object> payload=new LinkedHashMap<>(); payload.put("contents", contents); payload.put("generationConfig", Map.of("temperature",0.7)); if(systemInstruction!=null&&!systemInstruction.isBlank()) payload.put("systemInstruction", Map.of("parts", List.of(Map.of("text", systemInstruction)))); String body=json.writeValueAsString(payload);
    String endpoint=properties.baseUrl().replaceAll("/$","")+"/v1beta/models/"+properties.model()+":streamGenerateContent?alt=sse";
    HttpRequest request=HttpRequest.newBuilder(URI.create(endpoint)).timeout(Duration.ofSeconds(properties.timeoutSeconds())).header("Content-Type","application/json").header("x-goog-api-key",properties.apiKey()).POST(HttpRequest.BodyPublishers.ofString(body)).build();
    HttpResponse<java.util.stream.Stream<String>> response=client.send(request,HttpResponse.BodyHandlers.ofLines());

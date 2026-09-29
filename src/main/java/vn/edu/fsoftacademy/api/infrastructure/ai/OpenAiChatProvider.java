@@ -43,13 +43,16 @@ public class OpenAiChatProvider implements AiChatProvider {
   }
 
   @Override
-  public void stream(List<ChatMessage> history, Consumer<String> onDelta, BooleanSupplier isCancelled) {
+  public void stream(String systemInstruction, List<ChatMessage> history, Consumer<String> onDelta, BooleanSupplier isCancelled) {
     if (properties.apiKey() == null || properties.apiKey().isBlank()) {
       throw new AiProviderException("OpenAI is not configured. Set OPENAI_API_KEY.");
     }
 
     try {
       List<Map<String, String>> messages = new ArrayList<>();
+      if (systemInstruction != null && !systemInstruction.isBlank()) {
+        messages.add(Map.of("role", "system", "content", systemInstruction));
+      }
       for (ChatMessage message : history) {
         if (message.getStatus() == ChatMessageStatus.COMPLETED) {
           messages.add(Map.of(
