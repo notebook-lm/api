@@ -40,7 +40,12 @@ public class UploadDocumentCommandHandler {
     projects.findByIdAndOwnerId(projectId, ownerId).orElseThrow(ProjectNotFoundException::new);
     var id = UUID.randomUUID();
     var key = "projects/" + projectId + "/documents/" + id;
-    storage.put(key, command.content(), command.sizeBytes(), command.contentType());
+    storage.put(
+        key,
+        command.content(),
+        command.sizeBytes(),
+        command.contentType(),
+        command.originalFilename());
     try {
       var document = transactionTemplate.execute(status -> {
         Instant now = Instant.now();
