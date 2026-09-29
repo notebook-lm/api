@@ -12,9 +12,13 @@ import vn.edu.fsoftacademy.api.application.query.getconversation.GetConversation
 import vn.edu.fsoftacademy.api.application.repository.ChatConversationRepository;
 import vn.edu.fsoftacademy.api.application.repository.ChatMessageRepository;
 import vn.edu.fsoftacademy.api.application.repository.ProjectDocumentRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import vn.edu.fsoftacademy.api.domain.entity.*;
 
 public class ChatStreamingService {
+  private static final Logger log = LoggerFactory.getLogger(ChatStreamingService.class);
+
   private final GetConversationQueryHandler conversations;
   private final ChatConversationRepository conversationStore;
   private final ChatMessageRepository messages;
@@ -104,6 +108,8 @@ public class ChatStreamingService {
 
   private String systemInstruction(RetrievedContext retrieved) {
     if (!retrieved.isUsable()) return "";
+
+    log.info("Retrieved context: {}", retrieved);
     String sources = retrieved.sources().stream()
         .map(source -> "- %s — chunk %d (document_id: %s)".formatted(
             source.filename(), source.chunkIndex(), source.documentId()))
