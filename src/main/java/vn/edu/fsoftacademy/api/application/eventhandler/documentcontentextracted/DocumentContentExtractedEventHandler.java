@@ -11,7 +11,7 @@ import vn.edu.fsoftacademy.api.application.repository.ProjectRepository;
 
 public class DocumentContentExtractedEventHandler {
   private static final Logger log = LoggerFactory.getLogger(DocumentContentExtractedEventHandler.class);
-  private static final String EVENT_TYPE = "document.content.extracted";
+  private static final String EVENT_TYPE = "document.parsed";
   private static final String CONTENT_TYPE = "text/plain; charset=UTF-8";
 
   private final ProjectDocumentRepository documents;

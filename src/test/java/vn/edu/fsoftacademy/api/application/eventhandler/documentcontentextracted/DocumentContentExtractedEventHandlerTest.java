@@ -70,7 +70,7 @@ class DocumentContentExtractedEventHandlerTest {
   }
 
   private DocumentContentExtractedEvent event(UUID documentId, UUID projectId, UUID ownerId, String content) {
-    return new DocumentContentExtractedEvent(UUID.randomUUID(), "document.content.extracted", Instant.now(), documentId, projectId, ownerId, content);
+    return new DocumentContentExtractedEvent(UUID.randomUUID(), "document.parsed", Instant.now(), documentId, projectId, ownerId, content);
   }
 
   private ProjectDocument document(UUID documentId, UUID projectId) {
