@@ -27,6 +27,9 @@ import vn.edu.fsoftacademy.api.application.command.updateproject.UpdateProjectCo
 import vn.edu.fsoftacademy.api.application.command.uploaddocument.UploadDocumentCommandHandler;
 import vn.edu.fsoftacademy.api.application.eventhandler.documentcontentextracted.DocumentContentExtractedEventHandler;
 import vn.edu.fsoftacademy.api.application.eventhandler.documentprocessing.DocumentProcessingEventHandler;
+import vn.edu.fsoftacademy.api.application.eventhandler.documentprocessed.DocumentProcessedEventHandler;
+import vn.edu.fsoftacademy.api.application.eventhandler.documentparsedfailed.DocumentParsedFailedEventHandler;
+import vn.edu.fsoftacademy.api.application.eventhandler.documentprocessedfailed.DocumentProcessedFailedEventHandler;
 import vn.edu.fsoftacademy.api.application.mapper.outbox.DocumentUploadedOutboxEventMapper;
 import vn.edu.fsoftacademy.api.application.port.AccessTokenPort;
 import vn.edu.fsoftacademy.api.application.port.AiChatProvider;
@@ -192,9 +195,23 @@ public class ApplicationWiringConfig {
   }
 
   @Bean
-  DocumentProcessingEventHandler documentProcessingEventHandler(
-      UpdateDocumentProcessingStatusCommandHandler commandHandler) {
-    return new DocumentProcessingEventHandler(commandHandler);
+  DocumentProcessingEventHandler documentProcessingEventHandler(ProjectDocumentRepository documents) {
+    return new DocumentProcessingEventHandler(documents);
+  }
+
+  @Bean
+  DocumentProcessedEventHandler documentProcessedEventHandler(ProjectDocumentRepository documents) {
+    return new DocumentProcessedEventHandler(documents);
+  }
+
+  @Bean
+  DocumentParsedFailedEventHandler documentParsedFailedEventHandler(ProjectDocumentRepository documents) {
+    return new DocumentParsedFailedEventHandler(documents);
+  }
+
+  @Bean
+  DocumentProcessedFailedEventHandler documentProcessedFailedEventHandler(ProjectDocumentRepository documents) {
+    return new DocumentProcessedFailedEventHandler(documents);
   }
 
   @Bean
