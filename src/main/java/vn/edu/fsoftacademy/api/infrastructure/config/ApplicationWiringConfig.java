@@ -282,13 +282,13 @@ public class ApplicationWiringConfig {
 
   @Bean
   ChatStreamingService chatStreamingService(
-      GetConversationQueryHandler conversations,
-      ChatConversationRepository conversationStore,
+      ProjectRepository projects,
+      ChatConversationRepository conversations,
       ChatMessageRepository messages,
       ProjectDocumentRepository documents,
       AiChatProvider provider,
       RetrievalContextProvider retrieval) {
-    return new ChatStreamingService(conversations, conversationStore, messages, documents, provider, retrieval);
+    return new ChatStreamingService(projects, conversations, messages, documents, provider, retrieval);
   }
 
   @Bean

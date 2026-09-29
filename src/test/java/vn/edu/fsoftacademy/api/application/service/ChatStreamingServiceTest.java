@@ -11,10 +11,10 @@ import org.junit.jupiter.api.Test;
 import vn.edu.fsoftacademy.api.application.model.RetrievedContext;
 import vn.edu.fsoftacademy.api.application.port.AiChatProvider;
 import vn.edu.fsoftacademy.api.application.port.RetrievalContextProvider;
-import vn.edu.fsoftacademy.api.application.query.getconversation.GetConversationQueryHandler;
 import vn.edu.fsoftacademy.api.application.repository.ChatConversationRepository;
 import vn.edu.fsoftacademy.api.application.repository.ChatMessageRepository;
 import vn.edu.fsoftacademy.api.application.repository.ProjectDocumentRepository;
+import vn.edu.fsoftacademy.api.application.repository.ProjectRepository;
 import vn.edu.fsoftacademy.api.domain.entity.*;
 
 class ChatStreamingServiceTest {
@@ -22,8 +22,8 @@ class ChatStreamingServiceTest {
   void retrievesCompletedProjectDocumentsAndInjectsContextIntoProvider() {
     UUID ownerId = UUID.randomUUID(); UUID projectId = UUID.randomUUID(); UUID conversationId = UUID.randomUUID();
     UUID completedId = UUID.randomUUID();
-    var conversations = mock(GetConversationQueryHandler.class);
-    var conversationStore = mock(ChatConversationRepository.class);
+    var projects = mock(ProjectRepository.class);
+    var conversations = mock(ChatConversationRepository.class);
     var messages = mock(ChatMessageRepository.class);
     var documents = mock(ProjectDocumentRepository.class);
     var provider = mock(AiChatProvider.class);
@@ -32,7 +32,8 @@ class ChatStreamingServiceTest {
     var completed = document(completedId, projectId, DocumentProcessingStatus.COMPLETED);
     var pending = document(UUID.randomUUID(), projectId, DocumentProcessingStatus.PENDING);
     when(provider.name()).thenReturn("gemini");
-    when(conversations.handle(ownerId, projectId, conversationId)).thenReturn(conversation);
+    when(projects.findByIdAndOwnerId(projectId, ownerId)).thenReturn(java.util.Optional.of(mock(Project.class)));
+    when(conversations.findByIdAndProjectId(conversationId, projectId)).thenReturn(java.util.Optional.of(conversation));
     when(messages.save(any(ChatMessage.class))).thenAnswer(invocation -> invocation.getArgument(0));
     when(messages.findAllByConversationId(conversationId)).thenReturn(List.of());
     when(documents.findAllByProjectId(projectId)).thenReturn(List.of(completed, pending));
@@ -41,7 +42,7 @@ class ChatStreamingServiceTest {
     doAnswer(invocation -> { ((java.util.function.Consumer<String>) invocation.getArgument(2)).accept("Answer"); return null; })
         .when(provider).stream(anyString(), anyList(), any(), any());
 
-    var service = new ChatStreamingService(conversations, conversationStore, messages, documents, provider, retrieval);
+    var service = new ChatStreamingService(projects, conversations, messages, documents, provider, retrieval);
     var assistant = service.start(ownerId, projectId, conversationId, "What is covered?");
     var emittedSources = new java.util.ArrayList<java.util.List<ChatMessageCitation>>();
     var eventOrder = new java.util.ArrayList<String>();
@@ -63,15 +64,16 @@ class ChatStreamingServiceTest {
   @Test
   void skipsRetrievalWithoutCompletedDocuments() {
     UUID ownerId = UUID.randomUUID(); UUID projectId = UUID.randomUUID(); UUID conversationId = UUID.randomUUID();
-    var conversations = mock(GetConversationQueryHandler.class); var store = mock(ChatConversationRepository.class);
+    var projects = mock(ProjectRepository.class); var store = mock(ChatConversationRepository.class);
     var messages = mock(ChatMessageRepository.class); var documents = mock(ProjectDocumentRepository.class);
     var provider = mock(AiChatProvider.class); var retrieval = mock(RetrievalContextProvider.class);
     when(provider.name()).thenReturn("gemini");
-    when(conversations.handle(eq(ownerId), eq(projectId), eq(conversationId))).thenReturn(new ChatConversation(conversationId, projectId, "New conversation", null, Instant.now(), Instant.now()));
+    when(projects.findByIdAndOwnerId(eq(projectId), eq(ownerId))).thenReturn(java.util.Optional.of(mock(Project.class)));
+    when(store.findByIdAndProjectId(eq(conversationId), eq(projectId))).thenReturn(java.util.Optional.of(new ChatConversation(conversationId, projectId, "New conversation", null, Instant.now(), Instant.now())));
     when(messages.save(any())).thenAnswer(i -> i.getArgument(0)); when(messages.findAllByConversationId(conversationId)).thenReturn(List.of());
     when(documents.findAllByProjectId(projectId)).thenReturn(List.of(document(UUID.randomUUID(), projectId, DocumentProcessingStatus.PROCESSING)));
     doAnswer(i -> null).when(provider).stream(anyString(), anyList(), any(), any());
-    var service = new ChatStreamingService(conversations, store, messages, documents, provider, retrieval);
+    var service = new ChatStreamingService(projects, store, messages, documents, provider, retrieval);
     var assistant = service.start(ownerId, projectId, conversationId, "Hello");
     service.generate(conversationId, assistant, ignored -> {}, ignored -> {});
     verifyNoInteractions(retrieval);
@@ -81,16 +83,17 @@ class ChatStreamingServiceTest {
   @Test
   void fallsBackToPlainChatWhenRetrievalIsUnavailable() {
     UUID ownerId = UUID.randomUUID(); UUID projectId = UUID.randomUUID(); UUID conversationId = UUID.randomUUID(); UUID documentId = UUID.randomUUID();
-    var conversations = mock(GetConversationQueryHandler.class); var store = mock(ChatConversationRepository.class);
+    var projects = mock(ProjectRepository.class); var store = mock(ChatConversationRepository.class);
     var messages = mock(ChatMessageRepository.class); var documents = mock(ProjectDocumentRepository.class);
     var provider = mock(AiChatProvider.class); var retrieval = mock(RetrievalContextProvider.class);
     when(provider.name()).thenReturn("gemini");
-    when(conversations.handle(eq(ownerId), eq(projectId), eq(conversationId))).thenReturn(new ChatConversation(conversationId, projectId, "New conversation", null, Instant.now(), Instant.now()));
+    when(projects.findByIdAndOwnerId(eq(projectId), eq(ownerId))).thenReturn(java.util.Optional.of(mock(Project.class)));
+    when(store.findByIdAndProjectId(eq(conversationId), eq(projectId))).thenReturn(java.util.Optional.of(new ChatConversation(conversationId, projectId, "New conversation", null, Instant.now(), Instant.now())));
     when(messages.save(any())).thenAnswer(i -> i.getArgument(0)); when(messages.findAllByConversationId(conversationId)).thenReturn(List.of());
     when(documents.findAllByProjectId(projectId)).thenReturn(List.of(document(documentId, projectId, DocumentProcessingStatus.COMPLETED)));
     when(retrieval.retrieve(anyString(), eq(projectId), eq(List.of(documentId)))).thenReturn(RetrievedContext.empty());
     doAnswer(i -> { ((java.util.function.Consumer<String>) i.getArgument(2)).accept("fallback"); return null; }).when(provider).stream(anyString(), anyList(), any(), any());
-    var service = new ChatStreamingService(conversations, store, messages, documents, provider, retrieval);
+    var service = new ChatStreamingService(projects, store, messages, documents, provider, retrieval);
     var assistant = service.start(ownerId, projectId, conversationId, "Hello");
     assertEquals("fallback", service.generate(conversationId, assistant, ignored -> {}, ignored -> {}).getContent());
     verify(provider).stream(eq(""), anyList(), any(), any());

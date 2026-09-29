@@ -7,31 +7,33 @@ import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import vn.edu.fsoftacademy.api.application.exception.ConversationNotFoundException;
+import vn.edu.fsoftacademy.api.application.exception.ProjectNotFoundException;
 import vn.edu.fsoftacademy.api.application.model.ActiveGeneration;
 import vn.edu.fsoftacademy.api.application.model.RetrievedContext;
 import vn.edu.fsoftacademy.api.application.port.AiChatProvider;
 import vn.edu.fsoftacademy.api.application.port.RetrievalContextProvider;
-import vn.edu.fsoftacademy.api.application.query.getconversation.GetConversationQueryHandler;
 import vn.edu.fsoftacademy.api.application.repository.ChatConversationRepository;
 import vn.edu.fsoftacademy.api.application.repository.ChatMessageRepository;
 import vn.edu.fsoftacademy.api.application.repository.ProjectDocumentRepository;
+import vn.edu.fsoftacademy.api.application.repository.ProjectRepository;
 import vn.edu.fsoftacademy.api.domain.entity.*;
 
 public class ChatStreamingService {
   private static final Logger log = LoggerFactory.getLogger(ChatStreamingService.class);
-  private final GetConversationQueryHandler conversations;
-  private final ChatConversationRepository conversationStore;
+  private final ProjectRepository projects;
+  private final ChatConversationRepository conversations;
   private final ChatMessageRepository messages;
   private final ProjectDocumentRepository documents;
   private final AiChatProvider provider;
   private final RetrievalContextProvider retrieval;
   private final ConcurrentHashMap<UUID, ActiveGeneration> active = new ConcurrentHashMap<>();
 
-  public ChatStreamingService(GetConversationQueryHandler conversations, ChatConversationRepository conversationStore,
+  public ChatStreamingService(ProjectRepository projects, ChatConversationRepository conversations,
       ChatMessageRepository messages, ProjectDocumentRepository documents, AiChatProvider provider,
       RetrievalContextProvider retrieval) {
+    this.projects = projects;
     this.conversations = conversations;
-    this.conversationStore = conversationStore;
     this.messages = messages;
     this.documents = documents;
     this.provider = provider;
@@ -39,11 +41,11 @@ public class ChatStreamingService {
   }
 
   public ChatMessage start(UUID ownerId, UUID projectId, UUID conversationId, String content) {
-    ChatConversation conversation = conversations.handle(ownerId, projectId, conversationId);
+    ChatConversation conversation = findConversation(ownerId, projectId, conversationId);
     ChatMessage user = messages.save(new ChatMessage(conversationId, ChatMessageRole.USER, content, ChatMessageStatus.COMPLETED, null));
     conversation.touch(user.getCreatedAt());
     if ("New conversation".equals(conversation.getTitle())) conversation.rename(titleFrom(content));
-    conversationStore.save(conversation);
+    conversations.save(conversation);
     ChatMessage assistant = messages.save(new ChatMessage(conversationId, ChatMessageRole.ASSISTANT, "", ChatMessageStatus.STREAMING, provider.name()));
     active.put(assistant.getId(), new ActiveGeneration(conversation, assistant, content, projectId));
     return assistant;
@@ -68,7 +70,7 @@ public class ChatStreamingService {
       } else {
         assistant.complete();
         generation.conversation().touch(assistant.getUpdatedAt());
-        conversationStore.save(generation.conversation());
+        conversations.save(generation.conversation());
       }
       return messages.save(assistant);
     } catch (RuntimeException exception) {
@@ -86,7 +88,7 @@ public class ChatStreamingService {
   }
 
   public ChatMessage cancel(UUID ownerId, UUID projectId, UUID conversationId, UUID messageId) {
-    conversations.handle(ownerId, projectId, conversationId);
+    findConversation(ownerId, projectId, conversationId);
     ChatMessage message = messages.findById(messageId)
         .filter(candidate -> candidate.getConversationId().equals(conversationId) && candidate.getRole() == ChatMessageRole.ASSISTANT)
         .orElseThrow(() -> new IllegalArgumentException("Assistant message not found."));
@@ -96,6 +98,12 @@ public class ChatStreamingService {
       return messages.save(generation.assistant());
     }
     return message;
+  }
+
+  private ChatConversation findConversation(UUID ownerId, UUID projectId, UUID conversationId) {
+    projects.findByIdAndOwnerId(projectId, ownerId).orElseThrow(ProjectNotFoundException::new);
+    return conversations.findByIdAndProjectId(conversationId, projectId)
+        .orElseThrow(ConversationNotFoundException::new);
   }
 
   private RetrievedContext retrieve(ActiveGeneration generation) {
