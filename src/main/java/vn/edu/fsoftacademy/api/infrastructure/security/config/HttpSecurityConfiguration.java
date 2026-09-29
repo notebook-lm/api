@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -23,7 +22,7 @@ import vn.edu.fsoftacademy.api.infrastructure.security.jwt.JwtProperties;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-@EnableConfigurationProperties({CorsProperties.class, JwtProperties.class})
+@EnableConfigurationProperties({ CorsProperties.class, JwtProperties.class })
 public class HttpSecurityConfiguration {
   @Bean
   SecurityFilterChain securityFilterChain(
@@ -33,26 +32,24 @@ public class HttpSecurityConfiguration {
       ApiAccessDeniedHandler accessDeniedHandler)
       throws Exception {
     return http.csrf(csrf -> csrf.disable())
-        .cors(cors -> {})
+        .cors(cors -> {
+        })
         .sessionManagement(
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(
-            auth ->
-                auth.dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
-                    .requestMatchers(
-                        "/api/v1/auth/**", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**")
-                    .permitAll()
-                    .anyRequest()
-                    .authenticated())
+            auth -> auth.dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
+                .requestMatchers(
+                    "/api/v1/auth/**", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**")
+                .permitAll()
+                .anyRequest()
+                .authenticated())
         .exceptionHandling(
-            exceptions ->
-                exceptions
-                    .authenticationEntryPoint(authenticationEntryPoint)
-                    .accessDeniedHandler(accessDeniedHandler))
+            exceptions -> exceptions
+                .authenticationEntryPoint(authenticationEntryPoint)
+                .accessDeniedHandler(accessDeniedHandler))
         .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
         .build();
   }
-
 
   @Bean
   ApiAuthenticationEntryPoint apiAuthenticationEntryPoint() {
