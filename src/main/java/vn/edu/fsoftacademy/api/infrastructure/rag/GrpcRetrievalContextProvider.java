@@ -36,7 +36,7 @@ public class GrpcRetrievalContextProvider implements RetrievalContextProvider, A
           .build();
       var response = stub.withDeadlineAfter(properties.timeoutSeconds(), TimeUnit.SECONDS).retrieveContext(request);
       return new RetrievedContext(response.getContext(), response.getChunksList().stream()
-          .map(chunk -> new RetrievedContext.Source(chunk.getFilename(), chunk.getDocumentId(), chunk.getChunkIndex()))
+          .map(chunk -> new RetrievedContext.Source(chunk.getFilename(), chunk.getDocumentId(), chunk.getChunkIndex(), chunk.getContent()))
           .toList());
     } catch (StatusRuntimeException exception) {
       log.warn("RAG retrieval failed: status={}, projectId={}, documentCount={}",

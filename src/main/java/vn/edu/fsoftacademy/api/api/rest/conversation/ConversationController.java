@@ -124,6 +124,7 @@ public class ConversationController {
             try {
                 send(emitter, "started", message(assistant));
                 ChatMessage result = stream.generate(conversationId, assistant,
+                        sources -> send(emitter, "sources", new StreamSourcesResponse(assistant.getId(), sourceResponses(sources))),
                         delta -> send(emitter, "message", Map.of("delta", delta)));
                 if (result.getStatus() == ChatMessageStatus.COMPLETED)
                     send(emitter, "done", message(result));
@@ -172,8 +173,13 @@ public class ConversationController {
                 c.getCreatedAt(), c.getUpdatedAt());
     }
 
+    private java.util.List<CitationSourceResponse> sourceResponses(java.util.List<ChatMessageCitation> citations) {
+        return citations.stream().map(citation -> new CitationSourceResponse(citation.citationNumber(),
+                citation.documentId(), citation.filename(), citation.chunkIndex(), citation.excerpt())).toList();
+    }
+
     private ChatMessageResponse message(ChatMessage m) {
         return new ChatMessageResponse(m.getId(), m.getConversationId(), m.getRole().name(), m.getContent(),
-                m.getStatus().name(), m.getProvider(), m.getCreatedAt(), m.getUpdatedAt());
+                m.getStatus().name(), m.getProvider(), m.getCreatedAt(), m.getUpdatedAt(), sourceResponses(m.getCitations()));
     }
 }

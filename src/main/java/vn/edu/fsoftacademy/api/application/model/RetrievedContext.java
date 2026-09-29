@@ -16,5 +16,5 @@ public record RetrievedContext(String context, List<Source> sources) {
     return !context.isBlank();
   }
 
-  public record Source(String filename, String documentId, int chunkIndex) {}
+  public record Source(String filename, String documentId, int chunkIndex, String excerpt) {}
 }

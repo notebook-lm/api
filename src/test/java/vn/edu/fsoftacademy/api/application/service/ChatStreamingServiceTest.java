@@ -37,19 +37,27 @@ class ChatStreamingServiceTest {
     when(messages.findAllByConversationId(conversationId)).thenReturn(List.of());
     when(documents.findAllByProjectId(projectId)).thenReturn(List.of(completed, pending));
     when(retrieval.retrieve("What is covered?", projectId, List.of(completedId)))
-        .thenReturn(new RetrievedContext("Coverage is included.", List.of(new RetrievedContext.Source("policy.pdf", completedId.toString(), 4))));
+        .thenReturn(new RetrievedContext("Coverage is included.", List.of(new RetrievedContext.Source("policy.pdf", completedId.toString(), 4, "Coverage is included."))));
     doAnswer(invocation -> { ((java.util.function.Consumer<String>) invocation.getArgument(2)).accept("Answer"); return null; })
         .when(provider).stream(anyString(), anyList(), any(), any());
 
     var service = new ChatStreamingService(conversations, conversationStore, messages, documents, provider, retrieval);
     var assistant = service.start(ownerId, projectId, conversationId, "What is covered?");
-    var result = service.generate(conversationId, assistant, ignored -> {});
+    var emittedSources = new java.util.ArrayList<java.util.List<ChatMessageCitation>>();
+    var eventOrder = new java.util.ArrayList<String>();
+    var result = service.generate(conversationId, assistant,
+        sources -> { eventOrder.add("sources"); emittedSources.add(sources); },
+        ignored -> eventOrder.add("delta"));
 
     assertEquals(ChatMessageStatus.COMPLETED, result.getStatus());
+    assertEquals(1, result.getCitations().size());
+    assertEquals("Coverage is included.", result.getCitations().getFirst().excerpt());
+    assertEquals(1, emittedSources.getFirst().size());
+    assertEquals(java.util.List.of("sources", "delta"), eventOrder);
     assertEquals("Answer", result.getContent());
     verify(retrieval).retrieve("What is covered?", projectId, List.of(completedId));
     verify(provider).stream(contains("Coverage is included."), anyList(), any(), any());
-    verify(provider).stream(contains("policy.pdf — chunk 4"), anyList(), any(), any());
+    verify(provider).stream(contains("[^1] policy.pdf — chunk 4"), anyList(), any(), any());
   }
 
   @Test
@@ -65,7 +73,7 @@ class ChatStreamingServiceTest {
     doAnswer(i -> null).when(provider).stream(anyString(), anyList(), any(), any());
     var service = new ChatStreamingService(conversations, store, messages, documents, provider, retrieval);
     var assistant = service.start(ownerId, projectId, conversationId, "Hello");
-    service.generate(conversationId, assistant, ignored -> {});
+    service.generate(conversationId, assistant, ignored -> {}, ignored -> {});
     verifyNoInteractions(retrieval);
     verify(provider).stream(eq(""), anyList(), any(), any());
   }
@@ -84,7 +92,7 @@ class ChatStreamingServiceTest {
     doAnswer(i -> { ((java.util.function.Consumer<String>) i.getArgument(2)).accept("fallback"); return null; }).when(provider).stream(anyString(), anyList(), any(), any());
     var service = new ChatStreamingService(conversations, store, messages, documents, provider, retrieval);
     var assistant = service.start(ownerId, projectId, conversationId, "Hello");
-    assertEquals("fallback", service.generate(conversationId, assistant, ignored -> {}).getContent());
+    assertEquals("fallback", service.generate(conversationId, assistant, ignored -> {}, ignored -> {}).getContent());
     verify(provider).stream(eq(""), anyList(), any(), any());
   }
 
