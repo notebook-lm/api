@@ -3,8 +3,8 @@ package vn.edu.fsoftacademy.api.application.service;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
+import vn.edu.fsoftacademy.api.application.model.ActiveGeneration;
 import vn.edu.fsoftacademy.api.application.model.RetrievedContext;
 import vn.edu.fsoftacademy.api.application.port.AiChatProvider;
 import vn.edu.fsoftacademy.api.application.port.RetrievalContextProvider;
@@ -54,21 +54,21 @@ public class ChatStreamingService {
     try {
       String instruction = systemInstruction(retrieve(generation));
       provider.stream(instruction, messages.findAllByConversationId(conversationId), delta -> {
-        if (!generation.cancelled.get()) {
+        if (!generation.isCancelled()) {
           assistant.append(delta);
           onDelta.accept(delta);
         }
-      }, generation.cancelled::get);
-      if (generation.cancelled.get()) {
+      }, generation::isCancelled);
+      if (generation.isCancelled()) {
         assistant.cancel();
       } else {
         assistant.complete();
-        generation.conversation.touch(assistant.getUpdatedAt());
-        conversationStore.save(generation.conversation);
+        generation.conversation().touch(assistant.getUpdatedAt());
+        conversationStore.save(generation.conversation());
       }
       return messages.save(assistant);
     } catch (RuntimeException e) {
-      if (generation.cancelled.get()) {
+      if (generation.isCancelled()) {
         assistant.cancel();
         return messages.save(assistant);
       }
@@ -88,19 +88,18 @@ public class ChatStreamingService {
         .orElseThrow(() -> new IllegalArgumentException("Assistant message not found."));
     ActiveGeneration generation = active.get(messageId);
     if (generation != null) {
-      generation.cancelled.set(true);
-      generation.assistant.cancel();
-      return messages.save(generation.assistant);
+      generation.cancel();
+      return messages.save(generation.assistant());
     }
     return message;
   }
 
   private RetrievedContext retrieve(ActiveGeneration generation) {
-    List<UUID> documentIds = documents.findAllByProjectId(generation.projectId).stream()
+    List<UUID> documentIds = documents.findAllByProjectId(generation.projectId()).stream()
         .filter(document -> document.getProcessingStatus() == DocumentProcessingStatus.COMPLETED)
         .map(ProjectDocument::getId).toList();
     return documentIds.isEmpty() ? RetrievedContext.empty()
-        : retrieval.retrieve(generation.query, generation.projectId, documentIds);
+        : retrieval.retrieve(generation.query(), generation.projectId(), documentIds);
   }
 
   private String systemInstruction(RetrievedContext retrieved) {
@@ -128,18 +127,4 @@ public class ChatStreamingService {
     return normalized.length() > 80 ? normalized.substring(0, 77) + "..." : normalized;
   }
 
-  private static final class ActiveGeneration {
-    private final ChatConversation conversation;
-    private final ChatMessage assistant;
-    private final String query;
-    private final UUID projectId;
-    private final AtomicBoolean cancelled = new AtomicBoolean();
-
-    private ActiveGeneration(ChatConversation conversation, ChatMessage assistant, String query, UUID projectId) {
-      this.conversation = conversation;
-      this.assistant = assistant;
-      this.query = query;
-      this.projectId = projectId;
-    }
-  }
 }
