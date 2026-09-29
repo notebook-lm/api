@@ -23,7 +23,12 @@ public class DeleteProjectCommandHandler {
         projects.findByIdAndOwnerId(projectId, ownerId).orElseThrow(ProjectNotFoundException::new);
     documents
         .findAllByProjectId(projectId)
-        .forEach(document -> storage.delete(document.getObjectKey()));
+        .forEach(document -> {
+          storage.delete(document.getObjectKey());
+          if (document.getExtractedContentObjectKey() != null) {
+            storage.delete(document.getExtractedContentObjectKey());
+          }
+        });
     projects.delete(project);
   }
 }

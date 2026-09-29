@@ -26,6 +26,9 @@ public class DeleteDocumentCommandHandler {
             .findByIdAndProjectId(documentId, projectId)
             .orElseThrow(DocumentNotFoundException::new);
     storage.delete(document.getObjectKey());
+    if (document.getExtractedContentObjectKey() != null) {
+      storage.delete(document.getExtractedContentObjectKey());
+    }
     documents.delete(document);
   }
 }

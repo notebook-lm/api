@@ -5,6 +5,18 @@ spring:
       max-request-size: 25MB
   application:
     name: api
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      acks: all
+      properties:
+        enable.idempotence: true
+    consumer:
+      group-id: ${KAFKA_CONSUMER_GROUP:api}
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      ack-mode: record
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:notebook_lm}
     username: ${DB_USER:postgres}
@@ -27,12 +39,44 @@ app:
     bucket: ${MINIO_BUCKET:notebook-lm}
     access-key: ${MINIO_ACCESS_KEY:minioadmin}
     secret-key: ${MINIO_SECRET_KEY:minioadmin}
+  outbox:
+    enabled: ${OUTBOX_ENABLED:true}
+    poll-delay-ms: ${OUTBOX_POLL_DELAY_MS:1000}
+    batch-size: ${OUTBOX_BATCH_SIZE:20}
+    max-attempts: ${OUTBOX_MAX_ATTEMPTS:12}
+    initial-backoff-seconds: ${OUTBOX_INITIAL_BACKOFF_SECONDS:5}
+    max-backoff-seconds: ${OUTBOX_MAX_BACKOFF_SECONDS:3600}
+    claim-lease-seconds: ${OUTBOX_CLAIM_LEASE_SECONDS:60}
+  kafka:
+    consumer:
+      document-processing-topic: ${KAFKA_CONSUMER_DOCUMENT_PROCESSING_TOPIC:document.processing}
+      document-processed-topic: ${KAFKA_CONSUMER_DOCUMENT_PROCESSED_TOPIC:document.processed}
+      document-parsed-failed-topic: ${KAFKA_CONSUMER_DOCUMENT_PARSED_FAILED_TOPIC:document.parsed.failed}
+      document-processed-failed-topic: ${KAFKA_CONSUMER_DOCUMENT_PROCESSED_FAILED_TOPIC:document.processed.failed}
+      document-parsed-topic: ${KAFKA_CONSUMER_DOCUMENT_PARSED_TOPIC:document.parsed}
   jwt:
     # Override this in every non-local environment with a base64-encoded 256-bit secret.
     secret: ${JWT_SECRET:bG9jYWwtZGV2ZWxvcG1lbnQtc2VjcmV0LW11c3QtYmUtYXQtbGVhc3QtMzItYnl0ZXM=}
     access-token-ttl: ${JWT_ACCESS_TOKEN_TTL:PT15M}
     refresh-token-ttl: ${JWT_REFRESH_TOKEN_TTL:P30D}
-
+  grpc:
+    # RAG service gRPC client configuration. Add other service clients as sibling sections.
+    rag-service:
+      address: ${RAG_GRPC_ADDRESS:localhost:50051}
+      timeout-seconds: ${RAG_GRPC_TIMEOUT_SECONDS:5}
+      limit: ${RAG_RETRIEVAL_LIMIT:5}
+  ai:
+    provider: ${AI_PROVIDER:gemini}
+    gemini:
+      api-key: ${GEMINI_API_KEY:}
+      model: ${GEMINI_MODEL:gemini-2.5-flash}
+      base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com}
+      timeout-seconds: ${GEMINI_TIMEOUT_SECONDS:120}
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+      model: ${OPENAI_MODEL:gpt-4o-mini}
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+      timeout-seconds: ${OPENAI_TIMEOUT_SECONDS:120}
 
 springdoc:
   api-docs:

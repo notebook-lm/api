@@ -18,6 +18,7 @@ import vn.edu.fsoftacademy.api.application.port.ObjectStorage;
 import vn.edu.fsoftacademy.api.application.query.getdocument.GetDocumentQueryHandler;
 import vn.edu.fsoftacademy.api.application.query.listdocuments.ListDocumentsQueryHandler;
 import vn.edu.fsoftacademy.api.application.query.listdocuments.ListDocumentsResult;
+import vn.edu.fsoftacademy.api.domain.entity.DocumentProcessingStatus;
 import vn.edu.fsoftacademy.api.domain.entity.ProjectDocument;
 
 class ProjectDocumentControllerTest {
@@ -49,7 +50,8 @@ class ProjectDocumentControllerTest {
     when(upload.execute(eq(ownerId), eq(projectId), any()))
         .thenReturn(
             new UploadDocumentResult(
-                documentId, projectId, "source.pdf", "source.pdf", "application/pdf", 3, now, now));
+                documentId, projectId, "source.pdf", "source.pdf", "application/pdf", 3,
+                DocumentProcessingStatus.PENDING, now, now));
     var file = new MockMultipartFile("file", "source.pdf", "application/pdf", new byte[] {1, 2, 3});
     var response = controller.upload(ownerId, projectId, file, null);
     assertEquals(documentId, response.id());
@@ -105,14 +107,13 @@ class ProjectDocumentControllerTest {
   }
 
   @Test
-  void downloadStreamsStoredObjectWithOriginalMetadata() {
+  void contentStreamsExtractedTextObject() {
     var d = document();
     when(get.handle(ownerId, projectId, documentId)).thenReturn(d);
-    when(storage.get("object-key")).thenReturn(new ByteArrayInputStream(new byte[] {1}));
+    when(storage.get("extracted-content-key")).thenReturn(new ByteArrayInputStream("parsed text".getBytes()));
     var response = controller.content(ownerId, projectId, documentId);
-    assertEquals("application/pdf", response.getHeaders().getContentType().toString());
-    assertEquals(5, response.getHeaders().getContentLength());
-    verify(storage).get("object-key");
+    assertEquals("text/plain;charset=UTF-8", response.getHeaders().getContentType().toString());
+    verify(storage).get("extracted-content-key");
   }
 
   private ProjectDocument document() {
@@ -125,7 +126,9 @@ class ProjectDocumentControllerTest {
         "application/pdf",
         5,
         "object-key",
+        "extracted-content-key",
         now,
-        now);
+        now,
+        DocumentProcessingStatus.COMPLETED);
   }
 }

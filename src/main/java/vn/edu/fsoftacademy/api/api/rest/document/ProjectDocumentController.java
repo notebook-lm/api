@@ -20,6 +20,7 @@ import vn.edu.fsoftacademy.api.api.rest.shared.util.FileUploadUtils;
 import vn.edu.fsoftacademy.api.application.command.deletedocument.DeleteDocumentCommandHandler;
 import vn.edu.fsoftacademy.api.application.command.updatedocument.*;
 import vn.edu.fsoftacademy.api.application.command.uploaddocument.*;
+import vn.edu.fsoftacademy.api.application.exception.DocumentContentNotAvailableException;
 import vn.edu.fsoftacademy.api.application.port.ObjectStorage;
 import vn.edu.fsoftacademy.api.application.query.getdocument.GetDocumentQueryHandler;
 import vn.edu.fsoftacademy.api.application.query.listdocuments.DocumentSortDirection;
@@ -134,13 +135,16 @@ public class ProjectDocumentController {
       @PathVariable UUID projectId,
       @PathVariable UUID documentId) {
     var d = get.handle(ownerId, projectId, documentId);
-    InputStream stream = storage.get(d.getObjectKey());
+    String extractedContentObjectKey = d.getExtractedContentObjectKey();
+    if (extractedContentObjectKey == null) {
+      throw new DocumentContentNotAvailableException();
+    }
+    InputStream stream = storage.get(extractedContentObjectKey);
     return ResponseEntity.ok()
-        .contentType(MediaType.parseMediaType(d.getContentType()))
-        .contentLength(d.getSizeBytes())
+        .contentType(MediaType.parseMediaType("text/plain; charset=UTF-8"))
         .header(
             HttpHeaders.CONTENT_DISPOSITION,
-            ContentDisposition.attachment().filename(d.getOriginalFilename()).build().toString())
+            ContentDisposition.attachment().filename("%s.txt".formatted(d.getTitle())).build().toString())
         .body(new org.springframework.core.io.InputStreamResource(stream));
   }
 
@@ -185,16 +189,8 @@ public class ProjectDocumentController {
     };
   }
 
-  private ProjectDocumentResponse response(ProjectDocument d) {
-    return new ProjectDocumentResponse(
-        d.getId(),
-        d.getProjectId(),
-        d.getTitle(),
-        d.getOriginalFilename(),
-        d.getContentType(),
-        d.getSizeBytes(),
-        d.getCreatedAt(),
-        d.getUpdatedAt());
+  private ProjectDocumentResponse response(ProjectDocument document) {
+    return ProjectDocumentResponse.from(document);
   }
 
   private ProjectDocumentResponse response(UploadDocumentResult d) {
@@ -205,6 +201,7 @@ public class ProjectDocumentController {
         d.originalFilename(),
         d.contentType(),
         d.sizeBytes(),
+        d.status().name(),
         d.createdAt(),
         d.updatedAt());
   }

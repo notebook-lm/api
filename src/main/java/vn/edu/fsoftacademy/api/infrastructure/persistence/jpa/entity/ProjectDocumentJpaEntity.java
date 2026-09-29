@@ -3,6 +3,7 @@ package vn.edu.fsoftacademy.api.infrastructure.persistence.jpa.entity;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
+import vn.edu.fsoftacademy.api.domain.entity.DocumentProcessingStatus;
 
 @Entity
 @Table(name = "project_documents")
@@ -27,11 +28,18 @@ public class ProjectDocumentJpaEntity {
   @Column(name = "object_key", nullable = false)
   private String objectKey;
 
+  @Column(name = "extracted_content_object_key")
+  private String extractedContentObjectKey;
+
   @Column(name = "created_at", nullable = false)
   private Instant createdAt;
 
   @Column(name = "updated_at", nullable = false)
   private Instant updatedAt;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "processing_status", nullable = false)
+  private DocumentProcessingStatus processingStatus;
 
   protected ProjectDocumentJpaEntity() {}
 
@@ -43,8 +51,10 @@ public class ProjectDocumentJpaEntity {
       String contentType,
       long sizeBytes,
       String objectKey,
+      String extractedContentObjectKey,
       Instant createdAt,
-      Instant updatedAt) {
+      Instant updatedAt,
+      DocumentProcessingStatus processingStatus) {
     this.id = id;
     this.projectId = projectId;
     this.title = title;
@@ -52,8 +62,35 @@ public class ProjectDocumentJpaEntity {
     this.contentType = contentType;
     this.sizeBytes = sizeBytes;
     this.objectKey = objectKey;
+    this.extractedContentObjectKey = extractedContentObjectKey;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
+    this.processingStatus = processingStatus;
+  }
+
+  public ProjectDocumentJpaEntity(
+      UUID id,
+      UUID projectId,
+      String title,
+      String originalFilename,
+      String contentType,
+      long sizeBytes,
+      String objectKey,
+      Instant createdAt,
+      Instant updatedAt,
+      DocumentProcessingStatus processingStatus) {
+    this(
+        id,
+        projectId,
+        title,
+        originalFilename,
+        contentType,
+        sizeBytes,
+        objectKey,
+        null,
+        createdAt,
+        updatedAt,
+        processingStatus);
   }
 
   public UUID getId() {
@@ -83,6 +120,12 @@ public class ProjectDocumentJpaEntity {
   public String getObjectKey() {
     return objectKey;
   }
+
+  public String getExtractedContentObjectKey() {
+    return extractedContentObjectKey;
+  }
+
+  public DocumentProcessingStatus getProcessingStatus() { return processingStatus; }
 
   public Instant getCreatedAt() {
     return createdAt;

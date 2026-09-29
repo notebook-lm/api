@@ -2,6 +2,7 @@ package vn.edu.fsoftacademy.api.infrastructure.storage;
 
 import io.minio.*;
 import java.io.InputStream;
+import java.util.Map;
 import org.springframework.stereotype.Component;
 import vn.edu.fsoftacademy.api.application.exception.StorageException;
 import vn.edu.fsoftacademy.api.application.port.ObjectStorage;
@@ -11,12 +12,12 @@ public class MinioObjectStorage implements ObjectStorage {
     private final MinioClient client;
     private final String bucket;
 
-    public MinioObjectStorage(StorageProperties p) {
+    public MinioObjectStorage(StorageProperties properties) {
         this.client = MinioClient.builder()
-                .endpoint(p.endpoint())
-                .credentials(p.accessKey(), p.secretKey())
+                .endpoint(properties.endpoint())
+                .credentials(properties.accessKey(), properties.secretKey())
                 .build();
-        this.bucket = p.bucket();
+        this.bucket = properties.bucket();
     }
 
     private void ensureBucket() {
@@ -28,12 +29,14 @@ public class MinioObjectStorage implements ObjectStorage {
         }
     }
 
-    public void put(String key, InputStream content, long size, String contentType) {
+    public void put(
+            String key, InputStream content, long size, String contentType, String originalFilename) {
         ensureBucket();
         try {
             client.putObject(
                     PutObjectArgs.builder().bucket(bucket).object(key).stream(content, size, -1)
                             .contentType(contentType)
+                            .userMetadata(Map.of("original-filename", originalFilename))
                             .build());
         } catch (Exception ex) {
             throw new StorageException("Could not store document", ex);
