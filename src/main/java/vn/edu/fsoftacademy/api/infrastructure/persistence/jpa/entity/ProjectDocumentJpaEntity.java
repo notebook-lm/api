@@ -28,6 +28,9 @@ public class ProjectDocumentJpaEntity {
   @Column(name = "object_key", nullable = false)
   private String objectKey;
 
+  @Column(name = "extracted_content_object_key")
+  private String extractedContentObjectKey;
+
   @Column(name = "created_at", nullable = false)
   private Instant createdAt;
 
@@ -48,6 +51,7 @@ public class ProjectDocumentJpaEntity {
       String contentType,
       long sizeBytes,
       String objectKey,
+      String extractedContentObjectKey,
       Instant createdAt,
       Instant updatedAt,
       DocumentProcessingStatus processingStatus) {
@@ -58,9 +62,35 @@ public class ProjectDocumentJpaEntity {
     this.contentType = contentType;
     this.sizeBytes = sizeBytes;
     this.objectKey = objectKey;
+    this.extractedContentObjectKey = extractedContentObjectKey;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
     this.processingStatus = processingStatus;
+  }
+
+  public ProjectDocumentJpaEntity(
+      UUID id,
+      UUID projectId,
+      String title,
+      String originalFilename,
+      String contentType,
+      long sizeBytes,
+      String objectKey,
+      Instant createdAt,
+      Instant updatedAt,
+      DocumentProcessingStatus processingStatus) {
+    this(
+        id,
+        projectId,
+        title,
+        originalFilename,
+        contentType,
+        sizeBytes,
+        objectKey,
+        null,
+        createdAt,
+        updatedAt,
+        processingStatus);
   }
 
   public UUID getId() {
@@ -89,6 +119,10 @@ public class ProjectDocumentJpaEntity {
 
   public String getObjectKey() {
     return objectKey;
+  }
+
+  public String getExtractedContentObjectKey() {
+    return extractedContentObjectKey;
   }
 
   public DocumentProcessingStatus getProcessingStatus() { return processingStatus; }

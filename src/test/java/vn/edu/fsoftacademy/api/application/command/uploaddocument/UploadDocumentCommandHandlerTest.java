@@ -63,7 +63,8 @@ class UploadDocumentCommandHandlerTest {
             matches("projects/" + project + "/documents/[0-9a-f-]+"),
             any(),
             eq(3L),
-            eq("application/pdf"));
+            eq("application/pdf"),
+            eq("source.pdf"));
     verify(documents)
         .save(
             argThat(

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import vn.edu.fsoftacademy.api.application.exception.ConflictException;
 import vn.edu.fsoftacademy.api.application.exception.DocumentNotFoundException;
+import vn.edu.fsoftacademy.api.application.exception.DocumentContentNotAvailableException;
 import vn.edu.fsoftacademy.api.application.exception.ProjectNotFoundException;
 import vn.edu.fsoftacademy.api.application.exception.ConversationNotFoundException;
 import vn.edu.fsoftacademy.api.application.exception.AiProviderException;
@@ -36,6 +37,11 @@ public class BusinessExceptionHandler extends GlobalExceptionHandler {
   @ExceptionHandler(DocumentNotFoundException.class)
   ResponseEntity<ApiError> documentNotFound(DocumentNotFoundException ex) {
     return error(HttpStatus.NOT_FOUND, ApiErrorCode.DOCUMENT_NOT_FOUND, ex.getMessage(), Map.of());
+  }
+
+  @ExceptionHandler(DocumentContentNotAvailableException.class)
+  ResponseEntity<ApiError> documentContentNotAvailable(DocumentContentNotAvailableException ex) {
+    return error(HttpStatus.NOT_FOUND, ApiErrorCode.DOCUMENT_CONTENT_NOT_AVAILABLE, ex.getMessage(), Map.of());
   }
 
   @ExceptionHandler(StorageException.class)

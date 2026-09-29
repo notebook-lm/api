@@ -36,6 +36,8 @@ public class JpaProjectDocumentAdapter implements ProjectDocumentRepository {
     return new PageResult<>(page.getContent().stream().map(this::domain).toList(), page.getNumber(), page.getSize(), page.getTotalElements(), page.getTotalPages(), page.hasNext(), page.hasPrevious());
   }
 
+  public Optional<ProjectDocument> findById(UUID id) { return documents.findById(id).map(this::domain); }
+
   public Optional<ProjectDocument> findByIdAndProjectId(UUID id, UUID projectId) { return documents.findByIdAndProjectId(id, projectId).map(this::domain); }
   public void delete(ProjectDocument document) { documents.deleteById(document.getId()); }
 
@@ -49,6 +51,6 @@ public class JpaProjectDocumentAdapter implements ProjectDocumentRepository {
       return builder.and(predicates.toArray(Predicate[]::new));
     };
   }
-  private ProjectDocument domain(ProjectDocumentJpaEntity e) { return new ProjectDocument(e.getId(), e.getProjectId(), e.getTitle(), e.getOriginalFilename(), e.getContentType(), e.getSizeBytes(), e.getObjectKey(), e.getCreatedAt(), e.getUpdatedAt(), e.getProcessingStatus()); }
-  private ProjectDocumentJpaEntity entity(ProjectDocument d) { return new ProjectDocumentJpaEntity(d.getId(), d.getProjectId(), d.getTitle(), d.getOriginalFilename(), d.getContentType(), d.getSizeBytes(), d.getObjectKey(), d.getCreatedAt(), d.getUpdatedAt(), d.getProcessingStatus()); }
+  private ProjectDocument domain(ProjectDocumentJpaEntity e) { return new ProjectDocument(e.getId(), e.getProjectId(), e.getTitle(), e.getOriginalFilename(), e.getContentType(), e.getSizeBytes(), e.getObjectKey(), e.getExtractedContentObjectKey(), e.getCreatedAt(), e.getUpdatedAt(), e.getProcessingStatus()); }
+  private ProjectDocumentJpaEntity entity(ProjectDocument d) { return new ProjectDocumentJpaEntity(d.getId(), d.getProjectId(), d.getTitle(), d.getOriginalFilename(), d.getContentType(), d.getSizeBytes(), d.getObjectKey(), d.getExtractedContentObjectKey(), d.getCreatedAt(), d.getUpdatedAt(), d.getProcessingStatus()); }
 }

@@ -25,6 +25,7 @@ import vn.edu.fsoftacademy.api.application.command.updatedocumentprocessingstatu
 import vn.edu.fsoftacademy.api.application.command.updateprofile.UpdateProfileCommandHandler;
 import vn.edu.fsoftacademy.api.application.command.updateproject.UpdateProjectCommandHandler;
 import vn.edu.fsoftacademy.api.application.command.uploaddocument.UploadDocumentCommandHandler;
+import vn.edu.fsoftacademy.api.application.eventhandler.documentcontentextracted.DocumentContentExtractedEventHandler;
 import vn.edu.fsoftacademy.api.application.eventhandler.documentprocessing.DocumentProcessingEventHandler;
 import vn.edu.fsoftacademy.api.application.mapper.outbox.DocumentUploadedOutboxEventMapper;
 import vn.edu.fsoftacademy.api.application.port.AccessTokenPort;
@@ -194,6 +195,15 @@ public class ApplicationWiringConfig {
   DocumentProcessingEventHandler documentProcessingEventHandler(
       UpdateDocumentProcessingStatusCommandHandler commandHandler) {
     return new DocumentProcessingEventHandler(commandHandler);
+  }
+
+  @Bean
+  DocumentContentExtractedEventHandler documentContentExtractedEventHandler(
+      ProjectDocumentRepository documents,
+      ProjectRepository projects,
+      ObjectStorage storage,
+      org.springframework.transaction.support.TransactionTemplate transactionTemplate) {
+    return new DocumentContentExtractedEventHandler(documents, projects, storage, transactionTemplate);
   }
 
   @Bean

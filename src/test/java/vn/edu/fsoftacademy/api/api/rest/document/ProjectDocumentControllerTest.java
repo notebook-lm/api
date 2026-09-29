@@ -107,14 +107,13 @@ class ProjectDocumentControllerTest {
   }
 
   @Test
-  void downloadStreamsStoredObjectWithOriginalMetadata() {
+  void contentStreamsExtractedTextObject() {
     var d = document();
     when(get.handle(ownerId, projectId, documentId)).thenReturn(d);
-    when(storage.get("object-key")).thenReturn(new ByteArrayInputStream(new byte[] {1}));
+    when(storage.get("extracted-content-key")).thenReturn(new ByteArrayInputStream("parsed text".getBytes()));
     var response = controller.content(ownerId, projectId, documentId);
-    assertEquals("application/pdf", response.getHeaders().getContentType().toString());
-    assertEquals(5, response.getHeaders().getContentLength());
-    verify(storage).get("object-key");
+    assertEquals("text/plain;charset=UTF-8", response.getHeaders().getContentType().toString());
+    verify(storage).get("extracted-content-key");
   }
 
   private ProjectDocument document() {
@@ -127,7 +126,9 @@ class ProjectDocumentControllerTest {
         "application/pdf",
         5,
         "object-key",
+        "extracted-content-key",
         now,
-        now);
+        now,
+        DocumentProcessingStatus.COMPLETED);
   }
 }

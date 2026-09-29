@@ -50,6 +50,7 @@ app:
   kafka:
     consumer:
       document-processing-topic: ${KAFKA_CONSUMER_DOCUMENT_PROCESSING_TOPIC:document.processing}
+      document-content-extracted-topic: ${KAFKA_CONSUMER_DOCUMENT_CONTENT_EXTRACTED_TOPIC:document.content.extracted}
   jwt:
     # Override this in every non-local environment with a base64-encoded 256-bit secret.
     secret: ${JWT_SECRET:bG9jYWwtZGV2ZWxvcG1lbnQtc2VjcmV0LW11c3QtYmUtYXQtbGVhc3QtMzItYnl0ZXM=}

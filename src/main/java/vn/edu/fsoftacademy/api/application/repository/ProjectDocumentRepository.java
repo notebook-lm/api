@@ -14,6 +14,8 @@ public interface ProjectDocumentRepository {
 
   PageResult<ProjectDocument> findPageByProjectId(UUID projectId, ListDocumentsQuery query);
 
+  Optional<ProjectDocument> findById(UUID id);
+
   Optional<ProjectDocument> findByIdAndProjectId(UUID id, UUID projectId);
 
   void delete(ProjectDocument document);

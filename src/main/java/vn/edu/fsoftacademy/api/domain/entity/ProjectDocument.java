@@ -11,6 +11,7 @@ public class ProjectDocument {
   private final String contentType;
   private final long sizeBytes;
   private final String objectKey;
+  private String extractedContentObjectKey;
   private final Instant createdAt;
   private Instant updatedAt;
   private DocumentProcessingStatus processingStatus;
@@ -56,6 +57,7 @@ public class ProjectDocument {
       String contentType,
       long sizeBytes,
       String objectKey,
+      String extractedContentObjectKey,
       Instant createdAt,
       Instant updatedAt,
       DocumentProcessingStatus processingStatus) {
@@ -66,9 +68,35 @@ public class ProjectDocument {
     this.contentType = contentType;
     this.sizeBytes = sizeBytes;
     this.objectKey = objectKey;
+    this.extractedContentObjectKey = extractedContentObjectKey;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
     this.processingStatus = processingStatus;
+  }
+
+  public ProjectDocument(
+      UUID id,
+      UUID projectId,
+      String title,
+      String originalFilename,
+      String contentType,
+      long sizeBytes,
+      String objectKey,
+      Instant createdAt,
+      Instant updatedAt,
+      DocumentProcessingStatus processingStatus) {
+    this(
+        id,
+        projectId,
+        title,
+        originalFilename,
+        contentType,
+        sizeBytes,
+        objectKey,
+        null,
+        createdAt,
+        updatedAt,
+        processingStatus);
   }
 
   public void rename(String title) {
@@ -78,6 +106,11 @@ public class ProjectDocument {
 
   public void updateProcessingStatus(DocumentProcessingStatus processingStatus) {
     this.processingStatus = processingStatus;
+    this.updatedAt = Instant.now();
+  }
+
+  public void storeExtractedContent(String extractedContentObjectKey) {
+    this.extractedContentObjectKey = extractedContentObjectKey;
     this.updatedAt = Instant.now();
   }
 
@@ -111,6 +144,10 @@ public class ProjectDocument {
 
   public String getObjectKey() {
     return objectKey;
+  }
+
+  public String getExtractedContentObjectKey() {
+    return extractedContentObjectKey;
   }
 
   public Instant getCreatedAt() {
