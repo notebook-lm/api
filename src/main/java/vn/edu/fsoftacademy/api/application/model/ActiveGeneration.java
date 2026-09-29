@@ -5,7 +5,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import vn.edu.fsoftacademy.api.domain.entity.ChatConversation;
 import vn.edu.fsoftacademy.api.domain.entity.ChatMessage;
 
-/** Mutable state for an assistant response that is currently being generated. */
+/**
+ * Mutable state for an assistant response that is currently being generated.
+ */
 public final class ActiveGeneration {
   private final ChatConversation conversation;
   private final ChatMessage assistant;
@@ -20,11 +22,25 @@ public final class ActiveGeneration {
     this.projectId = projectId;
   }
 
-  public ChatConversation conversation() { return conversation; }
-  public ChatMessage assistant() { return assistant; }
-  public String query() { return query; }
-  public UUID projectId() { return projectId; }
-  public boolean isCancelled() { return cancelled.get(); }
+  public ChatConversation conversation() {
+    return conversation;
+  }
+
+  public ChatMessage assistant() {
+    return assistant;
+  }
+
+  public String query() {
+    return query;
+  }
+
+  public UUID projectId() {
+    return projectId;
+  }
+
+  public boolean isCancelled() {
+    return cancelled.get();
+  }
 
   public void cancel() {
     cancelled.set(true);

@@ -56,7 +56,7 @@ public class ConversationController {
     @Operation(summary = "Create a conversation")
     public ConversationResponse create(@AuthenticationPrincipal UUID ownerId, @PathVariable UUID projectId,
             @Valid @RequestBody(required = false) CreateConversationRequest request) {
-        return conversation(create.execute(ownerId, projectId,
+        return ConversationResponse.from(create.execute(ownerId, projectId,
                 new CreateConversationCommand(request == null ? null : request.title())));
     }
 
@@ -66,9 +66,10 @@ public class ConversationController {
     public ConversationPageResponse list(@AuthenticationPrincipal UUID ownerId, @PathVariable UUID projectId,
             @RequestParam(required = false) String q, @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        validatePage(page, size);
+        if (page < 0 || size < 1 || size > 100)
+            throw new IllegalArgumentException("page must be non-negative and size must be between 1 and 100");
         var r = list.handle(ownerId, projectId, new ListConversationsQuery(q, page, size));
-        return new ConversationPageResponse(r.items().stream().map(this::conversation).toList(), r.page(), r.size(),
+        return new ConversationPageResponse(r.items().stream().map(ConversationResponse::from).toList(), r.page(), r.size(),
                 r.totalItems(), r.totalPages(), r.hasNext(), r.hasPrevious());
     }
 
@@ -77,7 +78,7 @@ public class ConversationController {
     @Operation(summary = "Get a conversation")
     public ConversationResponse get(@AuthenticationPrincipal UUID ownerId, @PathVariable UUID projectId,
             @PathVariable UUID conversationId) {
-        return conversation(get.handle(ownerId, projectId, conversationId));
+        return ConversationResponse.from(get.handle(ownerId, projectId, conversationId));
     }
 
     @PatchMapping("/{conversationId}")
@@ -85,7 +86,7 @@ public class ConversationController {
     @Operation(summary = "Rename a conversation")
     public ConversationResponse update(@AuthenticationPrincipal UUID ownerId, @PathVariable UUID projectId,
             @PathVariable UUID conversationId, @Valid @RequestBody UpdateConversationRequest request) {
-        return conversation(
+        return ConversationResponse.from(
                 update.execute(ownerId, projectId, conversationId, new UpdateConversationCommand(request.title())));
     }
 
@@ -104,9 +105,10 @@ public class ConversationController {
     public ChatMessagePageResponse messages(@AuthenticationPrincipal UUID ownerId, @PathVariable UUID projectId,
             @PathVariable UUID conversationId, @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        validatePage(page, size);
+        if (page < 0 || size < 1 || size > 100)
+            throw new IllegalArgumentException("page must be non-negative and size must be between 1 and 100");
         var r = messages.handle(ownerId, projectId, conversationId, page, size);
-        return new ChatMessagePageResponse(r.items().stream().map(this::message).toList(), r.page(), r.size(),
+        return new ChatMessagePageResponse(r.items().stream().map(ChatMessageResponse::from).toList(), r.page(), r.size(),
                 r.totalItems(), r.totalPages(), r.hasNext(), r.hasPrevious());
     }
 
@@ -122,17 +124,34 @@ public class ConversationController {
         emitter.onTimeout(cancel);
         CompletableFuture.runAsync(() -> {
             try {
-                send(emitter, "started", message(assistant));
+                emitter.send(SseEmitter.event().name("started").data(ChatMessageResponse.from(assistant), MediaType.APPLICATION_JSON));
                 ChatMessage result = stream.generate(conversationId, assistant,
-                        sources -> send(emitter, "sources", new StreamSourcesResponse(assistant.getId(), sourceResponses(sources))),
-                        delta -> send(emitter, "message", Map.of("delta", delta)));
+                        sources -> {
+                            try {
+                                emitter.send(SseEmitter.event().name("sources").data(
+                                        new StreamSourcesResponse(assistant.getId(), sources.stream()
+                                                .map(CitationSourceResponse::from).toList()), MediaType.APPLICATION_JSON));
+                            } catch (IOException ex) {
+                                throw new IllegalStateException("Client disconnected", ex);
+                            }
+                        },
+                        delta -> {
+                            try {
+                                emitter.send(SseEmitter.event().name("message")
+                                        .data(Map.of("delta", delta), MediaType.APPLICATION_JSON));
+                            } catch (IOException ex) {
+                                throw new IllegalStateException("Client disconnected", ex);
+                            }
+                        });
                 if (result.getStatus() == ChatMessageStatus.COMPLETED)
-                    send(emitter, "done", message(result));
+                    emitter.send(SseEmitter.event().name("done").data(ChatMessageResponse.from(result), MediaType.APPLICATION_JSON));
                 emitter.complete();
             } catch (Exception ex) {
                 cancel.run();
                 try {
-                    send(emitter, "error", Map.of("message", safeMessage(ex)));
+                    emitter.send(SseEmitter.event().name("error").data(
+                            Map.of("message", ex instanceof vn.edu.fsoftacademy.api.application.exception.AiProviderException
+                                    ? ex.getMessage() : "Chat generation failed."), MediaType.APPLICATION_JSON));
                 } catch (Exception ignored) {
                 }
                 emitter.complete();
@@ -147,39 +166,8 @@ public class ConversationController {
     @Operation(summary = "Cancel an active AI response")
     public ChatMessageResponse cancel(@AuthenticationPrincipal UUID ownerId, @PathVariable UUID projectId,
             @PathVariable UUID conversationId, @PathVariable UUID messageId) {
-        return message(stream.cancel(ownerId, projectId, conversationId, messageId));
+        return ChatMessageResponse.from(stream.cancel(ownerId, projectId, conversationId, messageId));
     }
 
-    private void send(SseEmitter emitter, String event, Object data) {
-        try {
-            emitter.send(SseEmitter.event().name(event).data(data, MediaType.APPLICATION_JSON));
-        } catch (IOException ex) {
-            throw new IllegalStateException("Client disconnected", ex);
-        }
-    }
 
-    private String safeMessage(Exception ex) {
-        return ex instanceof vn.edu.fsoftacademy.api.application.exception.AiProviderException ? ex.getMessage()
-                : "Chat generation failed.";
-    }
-
-    private void validatePage(int page, int size) {
-        if (page < 0 || size < 1 || size > 100)
-            throw new IllegalArgumentException("page must be non-negative and size must be between 1 and 100");
-    }
-
-    private ConversationResponse conversation(ChatConversation c) {
-        return new ConversationResponse(c.getId(), c.getProjectId(), c.getTitle(), c.getLastMessageAt(),
-                c.getCreatedAt(), c.getUpdatedAt());
-    }
-
-    private java.util.List<CitationSourceResponse> sourceResponses(java.util.List<ChatMessageCitation> citations) {
-        return citations.stream().map(citation -> new CitationSourceResponse(citation.citationNumber(),
-                citation.documentId(), citation.filename(), citation.chunkIndex(), citation.excerpt())).toList();
-    }
-
-    private ChatMessageResponse message(ChatMessage m) {
-        return new ChatMessageResponse(m.getId(), m.getConversationId(), m.getRole().name(), m.getContent(),
-                m.getStatus().name(), m.getProvider(), m.getCreatedAt(), m.getUpdatedAt(), sourceResponses(m.getCitations()));
-    }
 }

@@ -42,18 +42,23 @@ public class ChatStreamingService {
 
   public ChatMessage start(UUID ownerId, UUID projectId, UUID conversationId, String content) {
     ChatConversation conversation = findConversation(ownerId, projectId, conversationId);
-    ChatMessage user = messages.save(new ChatMessage(conversationId, ChatMessageRole.USER, content, ChatMessageStatus.COMPLETED, null));
+    ChatMessage user = messages
+        .save(new ChatMessage(conversationId, ChatMessageRole.USER, content, ChatMessageStatus.COMPLETED, null));
     conversation.touch(user.getCreatedAt());
-    if ("New conversation".equals(conversation.getTitle())) conversation.rename(titleFrom(content));
+    if ("New conversation".equals(conversation.getTitle()))
+      conversation.rename(titleFrom(content));
     conversations.save(conversation);
-    ChatMessage assistant = messages.save(new ChatMessage(conversationId, ChatMessageRole.ASSISTANT, "", ChatMessageStatus.STREAMING, provider.name()));
+    ChatMessage assistant = messages.save(
+        new ChatMessage(conversationId, ChatMessageRole.ASSISTANT, "", ChatMessageStatus.STREAMING, provider.name()));
     active.put(assistant.getId(), new ActiveGeneration(conversation, assistant, content, projectId));
     return assistant;
   }
 
-  public ChatMessage generate(UUID conversationId, ChatMessage assistant, Consumer<List<ChatMessageCitation>> onSources, Consumer<String> onDelta) {
+  public ChatMessage generate(UUID conversationId, ChatMessage assistant, Consumer<List<ChatMessageCitation>> onSources,
+      Consumer<String> onDelta) {
     ActiveGeneration generation = active.get(assistant.getId());
-    if (generation == null) return assistant;
+    if (generation == null)
+      return assistant;
     try {
       RetrievedContext retrieved = retrieve(generation);
       assistant.attachCitations(citations(retrieved));
@@ -74,7 +79,8 @@ public class ChatStreamingService {
       }
       return messages.save(assistant);
     } catch (RuntimeException exception) {
-      log.error("Chat generation failed: assistantMessageId={}, conversationId={}", assistant.getId(), conversationId, exception);
+      log.error("Chat generation failed: assistantMessageId={}, conversationId={}", assistant.getId(), conversationId,
+          exception);
       if (generation.isCancelled()) {
         assistant.cancel();
         return messages.save(assistant);
@@ -90,7 +96,8 @@ public class ChatStreamingService {
   public ChatMessage cancel(UUID ownerId, UUID projectId, UUID conversationId, UUID messageId) {
     findConversation(ownerId, projectId, conversationId);
     ChatMessage message = messages.findById(messageId)
-        .filter(candidate -> candidate.getConversationId().equals(conversationId) && candidate.getRole() == ChatMessageRole.ASSISTANT)
+        .filter(candidate -> candidate.getConversationId().equals(conversationId)
+            && candidate.getRole() == ChatMessageRole.ASSISTANT)
         .orElseThrow(() -> new IllegalArgumentException("Assistant message not found."));
     ActiveGeneration generation = active.get(messageId);
     if (generation != null) {
@@ -110,22 +117,26 @@ public class ChatStreamingService {
     List<UUID> documentIds = documents.findAllByProjectId(generation.projectId()).stream()
         .filter(document -> document.getProcessingStatus() == DocumentProcessingStatus.COMPLETED)
         .map(ProjectDocument::getId).toList();
-    return documentIds.isEmpty() ? RetrievedContext.empty() : retrieval.retrieve(generation.query(), generation.projectId(), documentIds);
+    return documentIds.isEmpty() ? RetrievedContext.empty()
+        : retrieval.retrieve(generation.query(), generation.projectId(), documentIds);
   }
 
   private List<ChatMessageCitation> citations(RetrievedContext retrieved) {
     return IntStream.range(0, retrieved.sources().size()).mapToObj(index -> {
       var source = retrieved.sources().get(index);
-      return new ChatMessageCitation(index + 1, UUID.fromString(source.documentId()), source.filename(), source.chunkIndex(), source.excerpt());
+      return new ChatMessageCitation(index + 1, UUID.fromString(source.documentId()), source.filename(),
+          source.chunkIndex(), source.excerpt());
     }).toList();
   }
 
   private String systemInstruction(RetrievedContext retrieved) {
-    if (!retrieved.isUsable()) return "";
+    if (!retrieved.isUsable())
+      return "";
     log.info("Retrieved context: {}", retrieved);
     String sources = IntStream.range(0, retrieved.sources().size()).mapToObj(index -> {
       var source = retrieved.sources().get(index);
-      return "- [^%d] %s — chunk %d (document_id: %s)".formatted(index + 1, source.filename(), source.chunkIndex(), source.documentId());
+      return "- [^%d] %s — chunk %d (document_id: %s)".formatted(index + 1, source.filename(), source.chunkIndex(),
+          source.documentId());
     }).reduce("", (left, right) -> left.isEmpty() ? right : left + "\n" + right);
     return """
         You are a helpful assistant. Use the document context below only when it is relevant.

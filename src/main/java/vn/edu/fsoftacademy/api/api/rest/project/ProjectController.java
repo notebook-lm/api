@@ -160,8 +160,7 @@ public class ProjectController {
   }
 
   private ProjectResponse response(vn.edu.fsoftacademy.api.domain.entity.Project result) {
-    return new ProjectResponse(
-        result.getId(), result.getTitle(), result.getDescription(), result.getCreatedAt(), result.getUpdatedAt());
+    return ProjectResponse.from(result);
   }
 
   private ProjectResponse response(GetProjectResult result) {

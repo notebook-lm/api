@@ -189,17 +189,8 @@ public class ProjectDocumentController {
     };
   }
 
-  private ProjectDocumentResponse response(ProjectDocument d) {
-    return new ProjectDocumentResponse(
-        d.getId(),
-        d.getProjectId(),
-        d.getTitle(),
-        d.getOriginalFilename(),
-        d.getContentType(),
-        d.getSizeBytes(),
-        d.getProcessingStatus().name(),
-        d.getCreatedAt(),
-        d.getUpdatedAt());
+  private ProjectDocumentResponse response(ProjectDocument document) {
+    return ProjectDocumentResponse.from(document);
   }
 
   private ProjectDocumentResponse response(UploadDocumentResult d) {
