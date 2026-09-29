@@ -1,6 +1,8 @@
 package vn.edu.fsoftacademy.api.infrastructure.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.context.annotation.Bean;
@@ -28,6 +30,7 @@ import vn.edu.fsoftacademy.api.application.mapper.outbox.DocumentUploadedOutboxE
 import vn.edu.fsoftacademy.api.application.port.AccessTokenPort;
 import vn.edu.fsoftacademy.api.application.port.AiChatProvider;
 import vn.edu.fsoftacademy.api.application.port.JsonMapper;
+import vn.edu.fsoftacademy.api.application.port.RetrievalContextProvider;
 import vn.edu.fsoftacademy.api.application.port.ObjectStorage;
 import vn.edu.fsoftacademy.api.application.port.PasswordHasher;
 import vn.edu.fsoftacademy.api.application.port.RefreshTokenPort;
@@ -57,12 +60,14 @@ import vn.edu.fsoftacademy.api.infrastructure.ai.GeminiProperties;
 import vn.edu.fsoftacademy.api.infrastructure.ai.OpenAiChatProvider;
 import vn.edu.fsoftacademy.api.infrastructure.ai.OpenAiProperties;
 import vn.edu.fsoftacademy.api.infrastructure.storage.StorageProperties;
+import vn.edu.fsoftacademy.api.infrastructure.rag.GrpcRetrievalContextProvider;
+import vn.edu.fsoftacademy.api.infrastructure.rag.RagServiceGrpcProperties;
 import vn.edu.fsoftacademy.api.worker.OutboxWorkerProperties;
 
 @Configuration
 @EnableScheduling
 @EnableConfigurationProperties({
-    StorageProperties.class, OutboxWorkerProperties.class, AiProperties.class, GeminiProperties.class, OpenAiProperties.class
+    StorageProperties.class, OutboxWorkerProperties.class, AiProperties.class, GeminiProperties.class, OpenAiProperties.class, RagServiceGrpcProperties.class
 })
 public class ApplicationWiringConfig {
   @Bean
@@ -242,9 +247,21 @@ public class ApplicationWiringConfig {
     };
   }
 
+  @Bean(destroyMethod = "close")
+  GrpcRetrievalContextProvider retrievalContextProvider(RagServiceGrpcProperties properties) {
+    ManagedChannel channel = ManagedChannelBuilder.forTarget(properties.address()).usePlaintext().build();
+    return new GrpcRetrievalContextProvider(channel, properties);
+  }
+
   @Bean
-  ChatStreamingService chatStreamingService(GetConversationQueryHandler conversations, ChatConversationRepository conversationStore, ChatMessageRepository messages, AiChatProvider provider) {
-    return new ChatStreamingService(conversations, conversationStore, messages, provider);
+  ChatStreamingService chatStreamingService(
+      GetConversationQueryHandler conversations,
+      ChatConversationRepository conversationStore,
+      ChatMessageRepository messages,
+      ProjectDocumentRepository documents,
+      AiChatProvider provider,
+      RetrievalContextProvider retrieval) {
+    return new ChatStreamingService(conversations, conversationStore, messages, documents, provider, retrieval);
   }
 
   @Bean

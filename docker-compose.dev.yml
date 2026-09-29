@@ -52,6 +52,9 @@ services:
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
       OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com}
       OPENAI_TIMEOUT_SECONDS: ${OPENAI_TIMEOUT_SECONDS:-120}
+      RAG_GRPC_ADDRESS: ${RAG_GRPC_ADDRESS:-rag-service:50051}
+      RAG_GRPC_TIMEOUT_SECONDS: ${RAG_GRPC_TIMEOUT_SECONDS:-5}
+      RAG_RETRIEVAL_LIMIT: ${RAG_RETRIEVAL_LIMIT:-5}
     volumes:
       - .:/workspace
       - gradle-cache:/root/.gradle

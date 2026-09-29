@@ -55,6 +55,12 @@ app:
     secret: ${JWT_SECRET:bG9jYWwtZGV2ZWxvcG1lbnQtc2VjcmV0LW11c3QtYmUtYXQtbGVhc3QtMzItYnl0ZXM=}
     access-token-ttl: ${JWT_ACCESS_TOKEN_TTL:PT15M}
     refresh-token-ttl: ${JWT_REFRESH_TOKEN_TTL:P30D}
+  grpc:
+    # RAG service gRPC client configuration. Add other service clients as sibling sections.
+    rag-service:
+      address: ${RAG_GRPC_ADDRESS:localhost:50051}
+      timeout-seconds: ${RAG_GRPC_TIMEOUT_SECONDS:5}
+      limit: ${RAG_RETRIEVAL_LIMIT:5}
   ai:
     provider: ${AI_PROVIDER:gemini}
     gemini:
