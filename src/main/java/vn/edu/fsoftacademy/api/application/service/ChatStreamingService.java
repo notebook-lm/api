@@ -72,6 +72,7 @@ public class ChatStreamingService {
       }
       return messages.save(assistant);
     } catch (RuntimeException exception) {
+      log.error("Chat generation failed: assistantMessageId={}, conversationId={}", assistant.getId(), conversationId, exception);
       if (generation.isCancelled()) {
         assistant.cancel();
         return messages.save(assistant);

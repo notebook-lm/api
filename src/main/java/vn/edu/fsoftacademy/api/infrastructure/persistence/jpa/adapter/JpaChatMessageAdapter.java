@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import vn.edu.fsoftacademy.api.application.repository.ChatMessageRepository;
 import vn.edu.fsoftacademy.api.domain.entity.ChatMessage;
 import vn.edu.fsoftacademy.api.domain.entity.ChatMessageCitation;
@@ -23,10 +24,12 @@ public class JpaChatMessageAdapter implements ChatMessageRepository {
     this.citations = citations;
   }
 
+  @Transactional
   public ChatMessage save(ChatMessage message) {
     messages.save(toEntity(message));
-    citations.deleteByMessageId(message.getId());
-    citations.saveAll(message.getCitations().stream().map(citation -> toEntity(message.getId(), citation)).toList());
+    if (!message.getCitations().isEmpty()) {
+      citations.saveAll(message.getCitations().stream().map(citation -> toEntity(message.getId(), citation)).toList());
+    }
     return message;
   }
 
